@@ -9,7 +9,7 @@ defmodule Briscola do
     :swords
   ]
 
-  @ranks 0..9
+  @ranks 1..10
 
 
   defmodule Card do
@@ -33,12 +33,12 @@ defmodule Briscola do
   end
 
   @spec face(Card.t()) :: :ace | :jack | :king | :knight | :none
-  def face(%{"rank" => rank}) do
+  def face(%Card{:rank => rank}) do
     case rank do
-      0 -> :ace
-      7 -> :jack
-      8 -> :knight
-      9 -> :king
+      1 -> :ace
+      8 -> :jack
+      9 -> :knight
+      10 -> :king
       _ -> :none
     end
   end
