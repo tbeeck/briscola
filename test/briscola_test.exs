@@ -17,19 +17,19 @@ defmodule BriscolaTest do
 
   describe "faces" do
     test "1 is ace" do
-      assert :ace == Briscola.face(%Briscola.Card{rank: 1, suit: :cups})
+      assert :ace == Briscola.Card.face(%Briscola.Card{rank: 1, suit: :cups})
     end
 
     test "11 is jack" do
-      assert :jack == Briscola.face(%Briscola.Card{rank: 11, suit: :cups})
+      assert :jack == Briscola.Card.face(%Briscola.Card{rank: 11, suit: :cups})
     end
 
     test "12 is knight" do
-      assert :knight == Briscola.face(%Briscola.Card{rank: 12, suit: :cups})
+      assert :knight == Briscola.Card.face(%Briscola.Card{rank: 12, suit: :cups})
     end
 
     test "13 is king" do
-      assert :king == Briscola.face(%Briscola.Card{rank: 13, suit: :cups})
+      assert :king == Briscola.Card.face(%Briscola.Card{rank: 13, suit: :cups})
     end
   end
 

@@ -37,6 +37,20 @@ defmodule Briscola do
         _ -> 0
       end
     end
+
+    @doc """
+      Returns the face of a card.
+    """
+    @spec face(Card.t()) :: :ace | :jack | :king | :knight | :none
+    def face(%Card{:rank => rank}) do
+      case rank do
+        1 -> :ace
+        11 -> :jack
+        12 -> :knight
+        13 -> :king
+        _ -> :none
+      end
+    end
   end
 
   defmodule Deck do
@@ -70,20 +84,6 @@ defmodule Briscola do
     def take(%Deck{cards: cards} = deck, n) do
       {taken, new_deck} = Enum.split(cards, n)
       {%Deck{deck | cards: new_deck}, taken}
-    end
-  end
-
-  @doc """
-    Returns the face of a card.
-  """
-  @spec face(Card.t()) :: :ace | :jack | :king | :knight | :none
-  def face(%Card{:rank => rank}) do
-    case rank do
-      1 -> :ace
-      11 -> :jack
-      12 -> :knight
-      13 -> :king
-      _ -> :none
     end
   end
 end
