@@ -25,6 +25,18 @@ defmodule Briscola do
     @type suit() :: :cups | :batons | :coins | :swords
     @type rank() :: 1..13
     defstruct [:suit, :rank]
+
+    @spec score(Card.t()) :: integer()
+    def score(%Card{rank: rank}) do
+      case rank do
+        1 -> 11
+        3 -> 10
+        13 -> 4
+        12 -> 3
+        11 -> 2
+        _ -> 0
+      end
+    end
   end
 
   defmodule Deck do
@@ -43,15 +55,27 @@ defmodule Briscola do
 
       %Deck{cards: cards}
     end
+
+    @doc """
+      Shuffle a deck of cards.
+    """
+    def shuffle(%Deck{cards: cards}) do
+      %Deck{cards: Enum.shuffle(cards)}
+    end
+
+    @doc """
+      Take a number of cards from the top of the deck.
+    """
+    @spec take(Deck.t(), integer()) :: {Deck.t(), [Card.t()]}
+    def take(%Deck{cards: cards} = deck, n) do
+      {taken, new_deck} = Enum.split(cards, n)
+      {%Deck{deck | cards: new_deck}, taken}
+    end
   end
 
   @doc """
-    Shuffle a deck of cards.
+    Returns the face of a card.
   """
-  def shuffle(%Deck{cards: cards}) do
-    %Deck{cards: Enum.shuffle(cards)}
-  end
-
   @spec face(Card.t()) :: :ace | :jack | :king | :knight | :none
   def face(%Card{:rank => rank}) do
     case rank do
