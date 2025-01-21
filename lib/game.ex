@@ -59,6 +59,22 @@ defmodule Briscola.Game do
     %Briscola.Game{game | trick: []}
   end
 
+  def trick_winner(game) do
+    trump = trump_suit(game)
+    lead = lead_suit(game)
+
+    Enum.reduce(game.trick, nil, fn card, best ->
+      cond do
+        best == nil -> card
+        card.suit == trump && best.suit != trump -> card
+        card.suit == trump && best.suit == trump && card.rank > best.rank -> card
+        card.suit == lead && best.suit not in [lead, trump] -> card
+        card.suit == lead && best.suit == lead && card.rank > best.rank -> card
+        true -> best
+      end
+    end)
+  end
+
   @spec trump_suit(t()) :: Briscola.Card.suit()
   def trump_suit(game), do: game.briscola.suit
 
