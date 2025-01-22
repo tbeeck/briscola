@@ -44,11 +44,6 @@ defmodule BriscolaTest do
       assert game.players
     end
 
-    test "new game has hands" do
-      game = Briscola.Game.new()
-      assert game.hands
-    end
-
     test "new game has a briscola" do
       game = Briscola.Game.new()
       assert game.briscola
@@ -62,6 +57,21 @@ defmodule BriscolaTest do
     test "new game has a trump suit" do
       game = Briscola.Game.new()
       assert game.briscola.suit == Briscola.Game.trump_suit(game)
+    end
+  end
+
+  describe "test game" do
+    test "complete a trick 4 players" do
+      game = Briscola.Game.new(players: 4)
+      {:ok, game} = Briscola.Game.play(game, 0)
+      {:ok, game} = Briscola.Game.play(game, 0)
+      {:ok, game} = Briscola.Game.play(game, 0)
+      {:ok, game} = Briscola.Game.play(game, 0)
+      assert {:error, :trick_over} == Briscola.Game.play(game, 0)
+      {:ok, game, _winning_player} = Briscola.Game.score_trick(game)
+
+      assert 1 == Enum.count(game.players, fn player -> length(player.pile) == 4 end)
+      assert 4 == Enum.count(game.players, fn player -> length(player.hand) == 2 end)
     end
   end
 end

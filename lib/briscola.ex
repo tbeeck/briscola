@@ -21,10 +21,14 @@ defmodule Briscola do
   def ranks(), do: @ranks
 
   defmodule Card do
-    @type t() :: %Card{}
     @type suit() :: :cups | :batons | :coins | :swords
     @type rank() :: 1..13
     defstruct [:suit, :rank]
+
+    @type t() :: %__MODULE__{
+            suit: suit(),
+            rank: rank()
+          }
 
     @spec score(Card.t()) :: integer()
     def score(%Card{rank: rank}) do
@@ -54,8 +58,11 @@ defmodule Briscola do
   end
 
   defmodule Deck do
-    @type t() :: %Deck{}
     defstruct [:cards]
+
+    @type t() :: %__MODULE__{
+            cards: [Card.t()]
+          }
 
     @doc """
       Create a new deck of cards.
@@ -84,6 +91,28 @@ defmodule Briscola do
     def take(%Deck{cards: cards} = deck, n) do
       {taken, new_deck} = Enum.split(cards, n)
       {%Deck{deck | cards: new_deck}, taken}
+    end
+  end
+
+  defmodule Player do
+    defstruct [:hand, :pile]
+
+    @type t() :: %__MODULE__{
+            hand: [Card.t()],
+            pile: [Card.t()]
+          }
+
+    @doc """
+      Create a new player.
+    """
+    @spec new() :: Player.t()
+    def new() do
+      %Player{hand: [], pile: []}
+    end
+
+    @spec score(Player.t()) :: any()
+    def score(%Player{pile: pile}) do
+      Enum.reduce(pile, 0, fn card, acc -> acc + Card.score(card) end)
     end
   end
 end

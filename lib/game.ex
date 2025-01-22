@@ -1,52 +1,59 @@
 defmodule Briscola.Game do
+  alias Briscola.Card
   alias Briscola.Deck
+  alias Briscola.Player
 
   @hand_size 3
 
-  @type t() :: %Briscola.Game{}
-  defstruct [:deck, :players, :hands, :briscola, :trick, :action_on]
+  defstruct [:deck, :players, :briscola, :trick, :action_on]
 
-  @spec new(keyword()) :: Briscola.Game.t()
+  @type t() :: %__MODULE__{
+          deck: Deck.t(),
+          players: [Player.t()],
+          briscola: Card.t(),
+          trick: [Card.t()],
+          action_on: integer()
+        }
+
   def new(opts \\ []) do
-    players = Keyword.get(opts, :players, 2)
+    player_count = Keyword.get(opts, :players, 2)
 
     {deck, [briscola]} =
       Deck.new()
       |> Deck.shuffle()
       |> Deck.take(1)
 
-    {deck, hands} = deal(deck, players)
+    {deck, hand_cards} = Deck.take(deck, @hand_size * player_count)
+
+    players =
+      Enum.chunk_every(hand_cards, @hand_size)
+      |> Enum.map(fn hand -> %Player{hand: hand, pile: []} end)
 
     %Briscola.Game{
       deck: deck,
       players: players,
-      hands: hands,
       briscola: briscola,
       trick: [],
       action_on: Keyword.get(opts, :goes_first, 0)
     }
   end
 
-  defp deal(deck, players) do
-    {new_deck, cards} = Deck.take(deck, @hand_size * players)
-    hands = Enum.chunk_every(cards, @hand_size)
-    {new_deck, hands}
+  def play(game, _) when length(game.trick) == length(game.players) do
+    {:error, :trick_over}
   end
 
   def play(game, card_index) do
     card =
-      Enum.at(game.hands, game.action_on, [])
+      Enum.at(game.players, game.action_on).hand
       |> Enum.at(card_index)
 
     if card do
-      hand = Enum.at(game.hands, game.action_on)
-
       game =
         %Briscola.Game{
           game
-          | hands: List.replace_at(game.hands, game.action_on, List.delete(hand, card)),
-            trick: [card | game.trick],
-            action_on: rem(game.action_on + 1, game.players)
+          | trick: [card | game.trick],
+            action_on: rem(game.action_on + 1, length(game.players)),
+            players: List.update_at(game.players, game.action_on, &remove_card(&1, card))
         }
 
       {:ok, game}
@@ -55,30 +62,59 @@ defmodule Briscola.Game do
     end
   end
 
-  def score_trick(game) when length(game.trick) == game.players do
-    %Briscola.Game{game | trick: []}
+  defp remove_card(player, card) do
+    hand = Enum.reject(player.hand, &(&1 == card))
+    %Player{player | hand: hand}
+  end
+
+  def score_trick(game) when length(game.trick) != length(game.players) do
+    {:error, :trick_not_over}
+  end
+
+  def score_trick(game) do
+    {winning_player, _winning_card} = trick_winner(game)
+
+    game =
+      %Briscola.Game{
+        game
+        | players: List.update_at(game.players, winning_player, &take_trick(&1, game.trick)),
+          trick: [],
+          action_on: winning_player
+      }
+
+    {:ok, game, winning_player}
   end
 
   def trick_winner(game) do
     trump = trump_suit(game)
     lead = lead_suit(game)
 
-    Enum.reduce(game.trick, nil, fn card, best ->
-      cond do
-        best == nil -> card
-        card.suit == trump && best.suit != trump -> card
-        card.suit == trump && best.suit == trump && card.rank > best.rank -> card
-        card.suit == lead && best.suit not in [lead, trump] -> card
-        card.suit == lead && best.suit == lead && card.rank > best.rank -> card
-        true -> best
-      end
-    end)
+    winning_card =
+      Enum.reduce(game.trick, nil, fn card, best ->
+        cond do
+          best == nil -> card
+          card.suit == trump && best.suit != trump -> card
+          card.suit == trump && best.suit == trump && card.rank > best.rank -> card
+          card.suit == lead && best.suit not in [lead, trump] -> card
+          card.suit == lead && best.suit == lead && card.rank > best.rank -> card
+          true -> best
+        end
+      end)
+
+    winning_card_index = Enum.find_index(game.trick, &(&1 == winning_card))
+    # Work backwards to find index of winning player. Action should be on the original player after a full trick.
+    winning_player_index = abs(rem(game.action_on + winning_card_index, length(game.players)))
+    {winning_player_index, winning_card}
   end
 
-  @spec trump_suit(t()) :: Briscola.Card.suit()
+  def take_trick(player, trick) do
+    %Player{player | pile: player.pile ++ trick}
+  end
+
+  @spec trump_suit(t()) :: Card.suit()
   def trump_suit(game), do: game.briscola.suit
 
-  @spec lead_suit(t()) :: Briscola.Card.suit()
+  @spec lead_suit(t()) :: Card.suit()
   def lead_suit(game) when length(game.trick) == 0, do: nil
   def lead_suit(game) when length(game.trick) > 0, do: List.last(game.trick).suit
 end
