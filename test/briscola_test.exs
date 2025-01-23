@@ -1,5 +1,8 @@
 defmodule BriscolaTest do
   use ExUnit.Case
+
+  alias Briscola.GameFixture, as: TestGame
+
   doctest Briscola
 
   describe "deck" do
@@ -58,9 +61,14 @@ defmodule BriscolaTest do
       game = Briscola.Game.new()
       assert game.briscola.suit == Briscola.Game.trump_suit(game)
     end
+
+    test "players start with 3 cards" do
+      game = Briscola.Game.new()
+      assert Enum.all?(game.players, fn player -> length(player.hand) == 3 end)
+    end
   end
 
-  describe "test game" do
+  describe "game rules" do
     test "complete a trick 4 players" do
       game = Briscola.Game.new(players: 4)
       {:ok, game} = Briscola.Game.play(game, 0)
@@ -72,6 +80,23 @@ defmodule BriscolaTest do
 
       assert 1 == Enum.count(game.players, fn player -> length(player.pile) == 4 end)
       assert 4 == Enum.count(game.players, fn player -> length(player.hand) == 2 end)
+    end
+
+    test "briscola suit beats lead suit" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.hand(0, [%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.action_on(0)
+        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :batons}])
+
+      {:ok, game} = Briscola.Game.play(game, 0)
+
+      {:ok, game, winning_player} = Briscola.Game.score_trick(game)
+
+      # First player won the trick
+      assert 0 == winning_player
+      assert 2 == length(Enum.at(game.players, 0).pile)
     end
   end
 end

@@ -94,14 +94,17 @@ defmodule Briscola.Game do
         cond do
           best == nil -> card
           card.suit == trump && best.suit != trump -> card
-          card.suit == trump && best.suit == trump && card.rank > best.rank -> card
-          card.suit == lead && best.suit not in [lead, trump] -> card
-          card.suit == lead && best.suit == lead && card.rank > best.rank -> card
+          card.suit == trump && best.suit == trump && Card.score(card) > Card.score(best) -> card
+          card.suit == lead && best.suit != trump -> card
+          card.suit == lead && best.suit == lead && Card.score(card) > Card.score(best) -> card
           true -> best
         end
       end)
 
-    winning_card_index = Enum.find_index(game.trick, &(&1 == winning_card))
+    winning_card_index =
+      Enum.reverse(game.trick)
+      |> Enum.find_index(&(&1 == winning_card))
+
     # Work backwards to find index of winning player. Action should be on the original player after a full trick.
     winning_player_index = abs(rem(game.action_on + winning_card_index, length(game.players)))
     {winning_player_index, winning_card}
