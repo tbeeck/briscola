@@ -24,3 +24,6 @@ briscola-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# mac
+.DS_Store

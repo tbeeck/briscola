@@ -34,6 +34,12 @@ defmodule BriscolaTest do
     test "13 is king" do
       assert :king == Briscola.Card.face(%Briscola.Card{rank: 13, suit: :cups})
     end
+
+    test "other ranks have no face" do
+      Enum.each(2..10, fn rank ->
+        assert :none == Briscola.Card.face(%Briscola.Card{rank: rank, suit: :cups})
+      end)
+    end
   end
 
   describe "make a new game" do
@@ -66,10 +72,15 @@ defmodule BriscolaTest do
       game = Briscola.Game.new()
       assert Enum.all?(game.players, fn player -> length(player.hand) == 3 end)
     end
+
+    test "new game has no lead suit" do
+      game = Briscola.Game.new()
+      assert nil == Briscola.Game.lead_suit(game)
+    end
   end
 
   describe "game rules" do
-    test "complete a trick 4 players" do
+    test "one player takes trick" do
       game = Briscola.Game.new(players: 4)
       {:ok, game} = Briscola.Game.play(game, 0)
       {:ok, game} = Briscola.Game.play(game, 0)
@@ -80,6 +91,11 @@ defmodule BriscolaTest do
 
       assert 1 == Enum.count(game.players, fn player -> length(player.pile) == 4 end)
       assert 4 == Enum.count(game.players, fn player -> length(player.hand) == 2 end)
+    end
+
+    test "cannot prematurely score trick" do
+      game = Briscola.Game.new(players: 4)
+      assert {:error, :trick_not_over} == Briscola.Game.score_trick(game)
     end
 
     test "briscola suit beats lead suit" do
@@ -114,6 +130,86 @@ defmodule BriscolaTest do
       # First player played the lead suit
       assert 0 == winning_player
       assert 2 == length(Enum.at(game.players, 0).pile)
+    end
+
+    test "trump suit beats others" do
+      game =
+        TestGame.new(players: 4)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([
+          %Briscola.Card{rank: 4, suit: :coins},
+          %Briscola.Card{rank: 5, suit: :coins},
+          %Briscola.Card{rank: 6, suit: :coins}
+        ])
+        |> TestGame.hand(3, [%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.action_on(3)
+
+      {:ok, game} = Briscola.Game.play(game, 0)
+
+      {:ok, game, winning_player} = Briscola.Game.score_trick(game)
+
+      # Last player played trump suit
+      assert 3 == winning_player
+      assert 4 == length(Enum.at(game.players, 3).pile)
+    end
+
+    test "high rank beats low rank" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.hand(1, [%Briscola.Card{rank: 5, suit: :cups}])
+        |> TestGame.action_on(1)
+
+      {:ok, game} = Briscola.Game.play(game, 0)
+
+      {:ok, game, winning_player} = Briscola.Game.score_trick(game)
+
+      # First player played a higher rank
+      assert 1 == winning_player
+      assert 2 == length(Enum.at(game.players, 1).pile)
+    end
+  end
+
+  describe "scoring" do
+    test "score aces" do
+      assert 11 == Briscola.Card.score(%Briscola.Card{rank: 1, suit: :cups})
+    end
+
+    test "score 3s" do
+      assert 10 == Briscola.Card.score(%Briscola.Card{rank: 3, suit: :cups})
+    end
+
+    test "score kings" do
+      assert 4 == Briscola.Card.score(%Briscola.Card{rank: 13, suit: :cups})
+    end
+
+    test "score knights" do
+      assert 3 == Briscola.Card.score(%Briscola.Card{rank: 12, suit: :cups})
+    end
+
+    test "score jacks" do
+      assert 2 == Briscola.Card.score(%Briscola.Card{rank: 11, suit: :cups})
+    end
+
+    test "score other cards" do
+      assert 0 == Briscola.Card.score(%Briscola.Card{rank: 2, suit: :cups})
+    end
+
+    test "player score is sum of pile scores" do
+      player = %Briscola.Player{
+        hand: [],
+        pile: [
+          %Briscola.Card{rank: 1, suit: :cups},
+          %Briscola.Card{rank: 3, suit: :cups},
+          %Briscola.Card{rank: 13, suit: :cups},
+          %Briscola.Card{rank: 12, suit: :cups},
+          %Briscola.Card{rank: 11, suit: :cups},
+          %Briscola.Card{rank: 2, suit: :cups}
+        ]
+      }
+
+      assert 30 == Briscola.Player.score(player)
     end
   end
 end

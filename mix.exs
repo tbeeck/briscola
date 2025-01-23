@@ -8,7 +8,8 @@ defmodule Briscola.MixProject do
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      test_coverage: [ignore_modules: [Briscola.GameFixture, Mix.Tasks.Briscola.Play]]
     ]
   end
 
