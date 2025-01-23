@@ -86,15 +86,32 @@ defmodule BriscolaTest do
       game =
         TestGame.new(players: 2)
         |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :batons}])
         |> TestGame.hand(0, [%Briscola.Card{rank: 4, suit: :cups}])
         |> TestGame.action_on(0)
-        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :batons}])
 
       {:ok, game} = Briscola.Game.play(game, 0)
 
       {:ok, game, winning_player} = Briscola.Game.score_trick(game)
 
       # First player won the trick
+      assert 0 == winning_player
+      assert 2 == length(Enum.at(game.players, 0).pile)
+    end
+
+    test "lead suit beats others" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :batons})
+        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.hand(1, [%Briscola.Card{rank: 4, suit: :coins}])
+        |> TestGame.action_on(1)
+
+      {:ok, game} = Briscola.Game.play(game, 0)
+
+      {:ok, game, winning_player} = Briscola.Game.score_trick(game)
+
+      # First player played the lead suit
       assert 0 == winning_player
       assert 2 == length(Enum.at(game.players, 0).pile)
     end
