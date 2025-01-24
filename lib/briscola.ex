@@ -110,7 +110,7 @@ defmodule Briscola do
       %Player{hand: [], pile: []}
     end
 
-    @spec score(Player.t()) :: any()
+    @spec score(Player.t()) :: integer()
     def score(%Player{pile: pile}) do
       Enum.reduce(pile, 0, fn card, acc -> acc + Card.score(card) end)
     end
