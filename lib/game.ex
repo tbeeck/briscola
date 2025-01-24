@@ -42,12 +42,20 @@ defmodule Briscola.Game do
     {:error, :trick_over}
   end
 
-  def play(game, card_index) do
+  def play(game, card_index) when is_integer(card_index) do
     card =
       Enum.at(game.players, game.action_on).hand
       |> Enum.at(card_index)
 
     if card do
+      play(game, card)
+    else
+      {:error, :invalid_card}
+    end
+  end
+
+  def play(game, %Card{} = card) do
+    if card in Enum.at(game.players, game.action_on).hand do
       game =
         %Briscola.Game{
           game

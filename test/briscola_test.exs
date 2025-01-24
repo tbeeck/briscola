@@ -175,6 +175,29 @@ defmodule BriscolaTest do
       assert 1 == winning_player
       assert 2 == length(Enum.at(game.players, 1).pile)
     end
+
+    test "can play specific card" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.hand(1, [%Briscola.Card{rank: 5, suit: :cups}])
+        |> TestGame.action_on(1)
+
+      {:ok, game} = Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
+    end
+
+    test "cant play nonexistent card" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.hand(1, [%Briscola.Card{rank: 5, suit: :cups}])
+        |> TestGame.action_on(1)
+
+      assert {:error, :invalid_card} ==
+               Briscola.Game.play(game, %Briscola.Card{rank: 6, suit: :cups})
+    end
   end
 
   describe "scoring" do
