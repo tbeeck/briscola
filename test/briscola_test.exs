@@ -147,7 +147,7 @@ defmodule BriscolaTest do
           %Briscola.Card{rank: 5, suit: :coins},
           %Briscola.Card{rank: 6, suit: :coins}
         ])
-        |> TestGame.hand(3, [%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.hand(3, [%Briscola.Card{rank: 3, suit: :cups}])
         |> TestGame.action_on(3)
 
       {:ok, game} = Briscola.Game.play(game, 0)
@@ -171,7 +171,7 @@ defmodule BriscolaTest do
 
       {:ok, game, winning_player} = Briscola.Game.score_trick(game)
 
-      # First player played a higher rank
+      # Second player played a higher rank
       assert 1 == winning_player
       assert 2 == length(Enum.at(game.players, 1).pile)
     end
@@ -191,12 +191,52 @@ defmodule BriscolaTest do
       game =
         TestGame.new(players: 2)
         |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
-        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :cups}])
-        |> TestGame.hand(1, [%Briscola.Card{rank: 5, suit: :cups}])
+        |> TestGame.trick([%Briscola.Card{rank: 3, suit: :cups}])
+        |> TestGame.hand(1, [%Briscola.Card{rank: 4, suit: :cups}])
         |> TestGame.action_on(1)
 
       assert {:error, :invalid_card} ==
-               Briscola.Game.play(game, %Briscola.Card{rank: 6, suit: :cups})
+               Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
+    end
+
+    test "cannot redeal before trick is scored" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 1, suit: :cups})
+        |> TestGame.trick([
+          %Briscola.Card{rank: 2, suit: :cups},
+          %Briscola.Card{rank: 3, suit: :cups}
+        ])
+        |> TestGame.fill_hands(2)
+
+      {:error, :trick_not_scored} = Briscola.Game.redeal(game)
+    end
+
+    test "cannot redeal if players have all cards" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 1, suit: :cups})
+        |> TestGame.fill_hands(3)
+
+      {:error, :players_have_cards} = Briscola.Game.redeal(game)
+    end
+
+    test "redeal gives cards back after a trick" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 1, suit: :cups})
+        |> TestGame.trick([
+          %Briscola.Card{rank: 2, suit: :cups},
+          %Briscola.Card{rank: 3, suit: :cups}
+        ])
+        |> TestGame.fill_hands(2)
+
+      game =
+        Briscola.Game.score_trick(game)
+        |> elem(1)
+        |> Briscola.Game.redeal()
+
+      assert Enum.all?(game.players, fn p -> length(p.hand) == 3 end)
     end
   end
 

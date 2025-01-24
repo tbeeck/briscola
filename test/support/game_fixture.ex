@@ -1,4 +1,5 @@
 defmodule Briscola.GameFixture do
+  alias Briscola.Player
   alias Briscola.Card
   alias Briscola.Deck
   alias Briscola.Game
@@ -34,6 +35,19 @@ defmodule Briscola.GameFixture do
           end),
         deck: pop_cards(game.deck, hand)
     }
+  end
+
+  def fill_hands(game, card_count) do
+    # Top up hands to card_count using top of deck
+    {players, deck} =
+      Enum.reduce(game.players, {[], game.deck}, fn player, {players_acc, deck_acc} ->
+        required_cards = max(0, card_count - length(player.hand))
+        {deck_acc, cards} = Deck.take(deck_acc, required_cards)
+        # Append to front to keep original order
+        {players_acc ++ [%Player{player | hand: cards ++ player.hand}], deck_acc}
+      end)
+
+    %Game{game | players: players, deck: deck}
   end
 
   @spec trick(Game.t(), [Card.t()]) :: Game.t()

@@ -1,4 +1,5 @@
 defmodule Briscola.Game do
+  alias Briscola.Game
   alias Briscola.Card
   alias Briscola.Deck
   alias Briscola.Player
@@ -23,19 +24,14 @@ defmodule Briscola.Game do
       |> Deck.shuffle()
       |> Deck.take(1)
 
-    {deck, hand_cards} = Deck.take(deck, @hand_size * player_count)
-
-    players =
-      Enum.chunk_every(hand_cards, @hand_size)
-      |> Enum.map(fn hand -> %Player{hand: hand, pile: []} end)
-
     %Briscola.Game{
       deck: deck,
-      players: players,
+      players: List.duplicate(%Player{hand: [], pile: []}, player_count),
       briscola: briscola,
       trick: [],
       action_on: Keyword.get(opts, :goes_first, 0)
     }
+    |> deal_cards(@hand_size)
   end
 
   def play(game, _) when length(game.trick) == length(game.players) do
@@ -91,7 +87,7 @@ defmodule Briscola.Game do
     {:ok, game, winning_player}
   end
 
-  def trick_winner(game) do
+  defp trick_winner(game) do
     trump = trump_suit(game)
     lead = lead_suit(game)
 
@@ -114,6 +110,28 @@ defmodule Briscola.Game do
     # Work backwards to find index of winning player. Action should be on the original player after a full trick.
     winning_player_index = abs(rem(game.action_on + winning_card_index, length(game.players)))
     {winning_player_index, winning_card}
+  end
+
+  def redeal(game) when length(game.trick) == 0 do
+    if Enum.all?(game.players, fn p -> length(p.hand) < 3 end) do
+      deal_cards(game, 1)
+    else
+      {:error, :players_have_cards}
+    end
+  end
+
+  def redeal(game) when length(game.trick) != 0 do
+    {:error, :trick_not_scored}
+  end
+
+  defp deal_cards(game, n) do
+    {new_deck, cards} = Deck.take(game.deck, n * length(game.players))
+
+    new_players =
+      Enum.zip(game.players, Enum.chunk_every(cards, n))
+      |> Enum.map(fn {player, new_cards} -> %Player{player | hand: new_cards ++ player.hand} end)
+
+    %Game{game | deck: new_deck, players: new_players}
   end
 
   def take_trick(player, trick) do
