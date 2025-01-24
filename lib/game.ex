@@ -56,23 +56,21 @@ defmodule Briscola.Game do
 
   def play(game, %Card{} = card) do
     if card in Enum.at(game.players, game.action_on).hand do
+      new_players =
+        List.update_at(game.players, game.action_on, &Player.remove_from_hand(&1, card))
+
       game =
         %Briscola.Game{
           game
           | trick: [card | game.trick],
             action_on: rem(game.action_on + 1, length(game.players)),
-            players: List.update_at(game.players, game.action_on, &remove_card(&1, card))
+            players: new_players
         }
 
       {:ok, game}
     else
       {:error, :invalid_card}
     end
-  end
-
-  defp remove_card(player, card) do
-    hand = Enum.reject(player.hand, &(&1 == card))
-    %Player{player | hand: hand}
   end
 
   def score_trick(game) when length(game.trick) != length(game.players) do

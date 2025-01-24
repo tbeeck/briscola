@@ -114,5 +114,11 @@ defmodule Briscola do
     def score(%Player{pile: pile}) do
       Enum.reduce(pile, 0, fn card, acc -> acc + Card.score(card) end)
     end
+
+    @spec remove_from_hand(Player.t(), Card.t()) :: t()
+    def remove_from_hand(player, card) do
+      hand = Enum.reject(player.hand, &(&1 == card))
+      %Player{player | hand: hand}
+    end
   end
 end
