@@ -62,6 +62,9 @@ defmodule Briscola do
   end
 
   defmodule Deck do
+    @moduledoc """
+      Struct for a deck of cards in the game of Briscola.
+    """
     defstruct [:cards]
 
     @type t() :: %__MODULE__{
@@ -69,7 +72,7 @@ defmodule Briscola do
           }
 
     @doc """
-      Create a new deck of cards.
+      Create a new deck of cards, not shuffled.
     """
     @spec new() :: Deck.t()
     def new() do
@@ -90,6 +93,7 @@ defmodule Briscola do
 
     @doc """
       Take a number of cards from the top of the deck.
+      The top of the deck is the beginning of the list of cards.
     """
     @spec take(Deck.t(), integer()) :: {Deck.t(), [Card.t()]}
     def take(%Deck{cards: cards} = deck, n) do
@@ -99,6 +103,11 @@ defmodule Briscola do
   end
 
   defmodule Player do
+    @moduledoc """
+      Struct for a player in the game of Briscola.
+      Players have a hand of playing cards and a pile of won cards.
+      The pile of won cards are used for scoring.
+    """
     defstruct [:hand, :pile]
 
     @type t() :: %__MODULE__{
@@ -114,11 +123,18 @@ defmodule Briscola do
       %Player{hand: [], pile: []}
     end
 
+    @doc """
+      Calculate the score of a player.
+      The score is the sum of the scores of the cards in the player's pile.
+    """
     @spec score(Player.t()) :: integer()
     def score(%Player{pile: pile}) do
       Enum.sum_by(pile, &Card.score(&1))
     end
 
+    @doc """
+      Remove a specific card from a player's hand.
+    """
     @spec remove_from_hand(Player.t(), Card.t()) :: t()
     def remove_from_hand(player, card) do
       hand = Enum.reject(player.hand, &(&1 == card))

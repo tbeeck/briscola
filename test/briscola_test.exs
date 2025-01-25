@@ -54,6 +54,11 @@ defmodule BriscolaTest do
       assert nil == Briscola.Game.lead_suit(game)
     end
 
+    test "game has a current player" do
+      game = Briscola.Game.new()
+      assert 0 == game.action_on
+    end
+
     test "game can be created with 4 players" do
       game = Briscola.Game.new(players: 4)
       assert 4 == length(game.players)
@@ -67,6 +72,31 @@ defmodule BriscolaTest do
     test "game cannot be created with 1 player" do
       assert_raise ArgumentError, fn ->
         Briscola.Game.new(players: 1)
+      end
+    end
+
+    test "player count defaults to 2" do
+      game = Briscola.Game.new()
+      assert 2 == length(game.players)
+    end
+
+    test "game starts with specified player" do
+      game = Briscola.Game.new(players: 2, goes_first: 1)
+      assert 1 == game.action_on
+    end
+
+    test "game starts with first player by default" do
+      game = Briscola.Game.new(players: 2)
+      assert 0 == game.action_on
+    end
+
+    test "raise error for invalid first player" do
+      assert_raise ArgumentError, fn ->
+        Briscola.Game.new(players: 2, goes_first: 2)
+      end
+
+      assert_raise ArgumentError, fn ->
+        Briscola.Game.new(players: 2, goes_first: -1)
       end
     end
   end

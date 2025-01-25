@@ -21,33 +21,43 @@ defmodule Briscola.Game do
           action_on: integer()
         }
 
+  @typedoc """
+    Options for creating a new game.
+    Players is the number of players, can be 2 or 4.
+    Goes first is the index of the player who goes first (zero indexed)
+  """
+  @type new_game_options() :: [players: 2 | 4, goes_first: non_neg_integer()]
+
   @doc """
   Create a new game of Briscola.
-  The
   """
-  @spec new(keyword()) :: t()
-  def new(opts \\ [])
+  @spec new(new_game_options()) :: t()
+  def new(opts \\ []) do
+    player_count =
+      case Keyword.get(opts, :players, 2) do
+        i when i in [2, 4] -> i
+        i -> raise ArgumentError, "Invalid number of players: #{i}"
+      end
 
-  def new(opts) do
-    player_count = Keyword.get(opts, :players, 2)
+    goes_first =
+      case Keyword.get(opts, :goes_first, 0) do
+        i when i < 0 or i >= player_count -> raise ArgumentError, "Invalid first player: #{i}"
+        i -> i
+      end
 
-    if player_count not in [2, 4] do
-      raise ArgumentError, "Invalid number of players: #{player_count}"
-    else
-      {deck, [briscola]} =
-        Deck.new()
-        |> Deck.shuffle()
-        |> Deck.take(1)
+    {deck, [briscola]} =
+      Deck.new()
+      |> Deck.shuffle()
+      |> Deck.take(1)
 
-      %Briscola.Game{
-        deck: deck,
-        players: List.duplicate(%Player{hand: [], pile: []}, player_count),
-        briscola: briscola,
-        trick: [],
-        action_on: Keyword.get(opts, :goes_first, 0)
-      }
-      |> deal_cards(@hand_size)
-    end
+    %Briscola.Game{
+      deck: deck,
+      players: List.duplicate(%Player{hand: [], pile: []}, player_count),
+      briscola: briscola,
+      trick: [],
+      action_on: goes_first
+    }
+    |> deal_cards(@hand_size)
   end
 
   def play(game, _) when length(game.trick) == length(game.players) do
