@@ -239,6 +239,14 @@ defmodule BriscolaTest do
 
       assert Enum.all?(game.players, fn p -> length(p.hand) == 3 end)
     end
+
+    test "cannot redeal when deck empty" do
+      # todo
+    end
+
+    test "last player gets briscola card on final redeal" do
+      # todo
+    end
   end
 
   describe "scoring" do
