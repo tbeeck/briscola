@@ -121,8 +121,8 @@ defmodule BriscolaTest do
 
       game = Briscola.Game.new(players: 4)
       {:ok, game} = Briscola.Game.play(game, 0)
-      assert {:error, :trick_not_over} == Briscola.Game.score_trick(game)
-      assert {:error, :trick_not_over} == Briscola.Game.score_trick(game)
+      {:ok, game} = Briscola.Game.play(game, 0)
+      {:ok, game} = Briscola.Game.play(game, 0)
       assert {:error, :trick_not_over} == Briscola.Game.score_trick(game)
     end
 
