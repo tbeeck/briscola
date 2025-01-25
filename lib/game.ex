@@ -120,12 +120,23 @@ defmodule Briscola.Game do
     winning_card =
       Enum.reduce(game.trick, nil, fn card, best ->
         cond do
-          best == nil -> card
-          card.suit == trump && best.suit != trump -> card
-          card.suit == trump && best.suit == trump && Card.strength(card) > Card.strength(best) -> card
-          card.suit == lead && best.suit != trump -> card
-          card.suit == lead && best.suit == lead && Card.strength(card) > Card.strength(best) -> card
-          true -> best
+          best == nil ->
+            card
+
+          card.suit == trump && best.suit != trump ->
+            card
+
+          card.suit == trump && best.suit == trump && Card.strength(card) > Card.strength(best) ->
+            card
+
+          card.suit == lead && best.suit != trump ->
+            card
+
+          card.suit == lead && best.suit == lead && Card.strength(card) > Card.strength(best) ->
+            card
+
+          true ->
+            best
         end
       end)
 
@@ -167,17 +178,26 @@ defmodule Briscola.Game do
   defp deal_cards(game, n) do
     {new_deck, cards} = Deck.take(game.deck, n * length(game.players))
 
+    final_player_index =
+      case game.action_on do
+        0 -> length(game.players) - 1
+        i -> i - 1
+      end
+
+    # To deal cards in the correct order, partition the list
+    # so that the winner is at the beginning.
+    {l_players, r_players} =
+      Enum.split(game.players, final_player_index)
+
     new_players =
-      game.players
-      |> Enum.with_index()
-      |> Enum.sort_by(fn {_player, index} ->
-        rem(index - game.action_on, length(game.players))
-      end)
+      (r_players ++ l_players)
       |> Enum.zip(Enum.chunk_every(cards, n))
-      |> Enum.sort_by(fn {{_player, index}, _new_cards} -> index end)
-      |> Enum.map(fn {{player, _index}, new_cards} ->
-        %Player{player | hand: new_cards ++ player.hand}
+      |> Enum.map(fn {player, new_cards} ->
+        %Player{player | hand: player.hand ++ new_cards}
       end)
+      |> Enum.split(length(game.players) - final_player_index)
+      |> Tuple.to_list()
+      |> Enum.concat()
 
     %Game{game | deck: new_deck, players: new_players}
   end

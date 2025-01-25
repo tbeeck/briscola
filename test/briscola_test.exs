@@ -142,6 +142,20 @@ defmodule BriscolaTest do
         assert pb == next_turn.action_on
       end)
     end
+
+    test "can't play when trick is over" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([
+          %Briscola.Card{rank: 3, suit: :cups},
+          %Briscola.Card{rank: 4, suit: :cups}
+        ])
+        |> TestGame.fill_hands(2)
+        |> TestGame.action_on(0)
+
+      {:error, :trick_over} = Briscola.Game.play(game, 0)
+    end
   end
 
   describe "trick scoring" do
