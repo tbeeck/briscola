@@ -123,6 +123,10 @@ defmodule BriscolaTest do
 
       assert {:error, :invalid_card} ==
                Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
+
+      # Players will never have 4 cards
+      assert {:error, :invalid_card} ==
+               Briscola.Game.play(game, 4)
     end
 
     test "playing a card moves action to the next player" do
