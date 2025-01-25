@@ -112,6 +112,24 @@ defmodule Briscola.Game do
     {winning_player_index, winning_card}
   end
 
+  def redeal(game) when length(game.trick) != 0 do
+    {:error, :trick_not_scored}
+  end
+
+  def redeal(game) when length(game.deck.cards) + 1 < length(game.players) do
+    {:error, :not_enough_cards}
+  end
+
+  # Deal the briscola to the last player
+  def redeal(game) when length(game.deck.cards) + 1 == length(game.players) do
+    game = %Briscola.Game{
+      game
+      | deck: %Deck{game.deck | cards: game.deck.cards ++ [game.briscola]}
+    }
+
+    deal_cards(game, 1)
+  end
+
   def redeal(game) when length(game.trick) == 0 do
     if Enum.all?(game.players, fn p -> length(p.hand) < 3 end) do
       deal_cards(game, 1)
@@ -120,16 +138,20 @@ defmodule Briscola.Game do
     end
   end
 
-  def redeal(game) when length(game.trick) != 0 do
-    {:error, :trick_not_scored}
-  end
-
   defp deal_cards(game, n) do
     {new_deck, cards} = Deck.take(game.deck, n * length(game.players))
 
     new_players =
-      Enum.zip(game.players, Enum.chunk_every(cards, n))
-      |> Enum.map(fn {player, new_cards} -> %Player{player | hand: new_cards ++ player.hand} end)
+      game.players
+      |> Enum.with_index()
+      |> Enum.sort_by(fn {_player, index} ->
+        rem(index - game.action_on, length(game.players))
+      end)
+      |> Enum.zip(Enum.chunk_every(cards, n))
+      |> Enum.sort_by(fn {{_player, index}, _new_cards} -> index end)
+      |> Enum.map(fn {{player, _index}, new_cards} ->
+        %Player{player | hand: new_cards ++ player.hand}
+      end)
 
     %Game{game | deck: new_deck, players: new_players}
   end

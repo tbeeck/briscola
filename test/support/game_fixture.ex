@@ -37,6 +37,7 @@ defmodule Briscola.GameFixture do
     }
   end
 
+  @spec fill_hands(Game.t(), integer()) :: Game.t()
   def fill_hands(game, card_count) do
     # Top up hands to card_count using top of deck
     {players, deck} =
@@ -88,5 +89,20 @@ defmodule Briscola.GameFixture do
     %Deck{
       cards: Enum.reject(deck.cards, fn c -> c == card end)
     }
+  end
+
+  @spec sim_trick(Game.t()) :: Game.t()
+  def sim_trick(game) do
+    {:ok, game, _} =
+      Enum.reduce(1..length(game.players), game, fn _, game_acc ->
+        {:ok, new_game} = Game.play(game_acc, 0)
+        new_game
+      end)
+      |> Game.score_trick()
+
+    case length(game.deck.cards) do
+      0 -> game
+      _ -> Game.redeal(game)
+    end
   end
 end

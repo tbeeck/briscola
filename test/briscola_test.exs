@@ -240,10 +240,6 @@ defmodule BriscolaTest do
       assert Enum.all?(game.players, fn p -> length(p.hand) == 3 end)
     end
 
-    test "cannot redeal when deck empty" do
-      # todo
-    end
-
     test "last player gets briscola card on final redeal" do
       # todo
     end
@@ -288,6 +284,33 @@ defmodule BriscolaTest do
       }
 
       assert 30 == Briscola.Player.score(player)
+    end
+  end
+
+  describe "sim games" do
+    test "sim one turn" do
+      game =
+        Briscola.Game.new(players: 4)
+        |> TestGame.sim_trick()
+
+      # Original deck: 52 cards
+      # initial deal: 3 cards for 4 players
+      # next deal: 3 cards for 4 players
+      # briscola: 1
+      assert 52 - (3 * 4 + 4) - 1 == length(game.deck.cards)
+    end
+
+    test "sim all tricks" do
+      players = 4
+      tricks_to_complete = Integer.floor_div(52, players)
+
+      game =
+        Enum.reduce(1..tricks_to_complete, Briscola.Game.new(players: players), fn _, game_acc ->
+          TestGame.sim_trick(game_acc)
+        end)
+
+      assert 0 == length(game.deck.cards)
+      assert 52 == Enum.reduce(game.players, 0, fn player, acc -> acc + length(player.pile) end)
     end
   end
 end
