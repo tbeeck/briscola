@@ -77,6 +77,22 @@ defmodule BriscolaTest do
       game = Briscola.Game.new()
       assert nil == Briscola.Game.lead_suit(game)
     end
+
+    test "game can be created with 4 players" do
+      game = Briscola.Game.new(players: 4)
+      assert 4 == length(game.players)
+    end
+
+    test "game can be created with 2 players" do
+      game = Briscola.Game.new(players: 2)
+      assert 2 == length(game.players)
+    end
+
+    test "game cannot be created with 1 player" do
+      assert_raise ArgumentError, fn ->
+        Briscola.Game.new(players: 1)
+      end
+    end
   end
 
   describe "game rules" do
@@ -188,7 +204,7 @@ defmodule BriscolaTest do
       assert %Briscola.Card{rank: 5, suit: :cups} == List.first(game.trick)
     end
 
-    test "cant play nonexistent card" do
+    test "can't play nonexistent card" do
       game =
         TestGame.new(players: 2)
         |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
@@ -265,7 +281,7 @@ defmodule BriscolaTest do
 
       game = Briscola.Game.redeal(gamme)
 
-      # Player 2 should get the briscola card
+      # Player 2 lost so they get the briscola card
       p2 = Enum.at(game.players, 1)
       assert Enum.any?(p2.hand, fn card -> card == briscola end)
     end

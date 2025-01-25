@@ -1,6 +1,6 @@
 defmodule Briscola do
   @moduledoc """
-  `Briscola` card game deck & rules.
+  `Briscola` card game concepts and rules.
   """
 
   @suits [
@@ -21,8 +21,26 @@ defmodule Briscola do
   def ranks(), do: @ranks
 
   defmodule Card do
+    @moduledoc """
+      Struct for a card in the game of Briscola.
+      https://en.m.wikipedia.org/wiki/Italian_playing_cards
+    """
+
+    @typedoc """
+      Suit of a card.
+    """
     @type suit() :: :cups | :batons | :coins | :swords
+
+    @typedoc """
+      Valid ranks for a card.
+    """
     @type rank() :: 1..13
+
+    @typedoc """
+      Face of a card.
+      Ace is 1, Jack is 11, Knight is 12, King is 13.
+    """
+    @type face() :: :ace | :jack | :king | :knight | :none
     defstruct [:suit, :rank]
 
     @type t() :: %__MODULE__{
@@ -30,6 +48,11 @@ defmodule Briscola do
             rank: rank()
           }
 
+    @doc """
+      Returns the score of a card.
+      This score is used for comparing what card wins a trick,
+      and for calculating the player's final score.
+    """
     @spec score(Card.t()) :: integer()
     def score(%Card{rank: rank}) do
       case rank do
@@ -45,7 +68,7 @@ defmodule Briscola do
     @doc """
       Returns the face of a card.
     """
-    @spec face(Card.t()) :: :ace | :jack | :king | :knight | :none
+    @spec face(Card.t()) :: face()
     def face(%Card{:rank => rank}) do
       case rank do
         1 -> :ace
@@ -112,7 +135,7 @@ defmodule Briscola do
 
     @spec score(Player.t()) :: integer()
     def score(%Player{pile: pile}) do
-      Enum.reduce(pile, 0, fn card, acc -> acc + Card.score(card) end)
+      Enum.sum_by(pile, &Card.score(&1))
     end
 
     @spec remove_from_hand(Player.t(), Card.t()) :: t()

@@ -1,4 +1,9 @@
 defmodule Briscola.Game do
+  @moduledoc """
+  `Briscola.Game` module implements a struct that represents a game state,
+  and functions to manipulate the game state according to the stages of the game.
+  """
+
   alias Briscola.Game
   alias Briscola.Card
   alias Briscola.Deck
@@ -16,22 +21,33 @@ defmodule Briscola.Game do
           action_on: integer()
         }
 
-  def new(opts \\ []) do
+  @doc """
+  Create a new game of Briscola.
+  The
+  """
+  @spec new(keyword()) :: t()
+  def new(opts \\ [])
+
+  def new(opts) do
     player_count = Keyword.get(opts, :players, 2)
 
-    {deck, [briscola]} =
-      Deck.new()
-      |> Deck.shuffle()
-      |> Deck.take(1)
+    if player_count not in [2, 4] do
+      raise ArgumentError, "Invalid number of players: #{player_count}"
+    else
+      {deck, [briscola]} =
+        Deck.new()
+        |> Deck.shuffle()
+        |> Deck.take(1)
 
-    %Briscola.Game{
-      deck: deck,
-      players: List.duplicate(%Player{hand: [], pile: []}, player_count),
-      briscola: briscola,
-      trick: [],
-      action_on: Keyword.get(opts, :goes_first, 0)
-    }
-    |> deal_cards(@hand_size)
+      %Briscola.Game{
+        deck: deck,
+        players: List.duplicate(%Player{hand: [], pile: []}, player_count),
+        briscola: briscola,
+        trick: [],
+        action_on: Keyword.get(opts, :goes_first, 0)
+      }
+      |> deal_cards(@hand_size)
+    end
   end
 
   def play(game, _) when length(game.trick) == length(game.players) do
