@@ -36,11 +36,6 @@ defmodule Briscola do
     """
     @type rank() :: 1..13
 
-    @typedoc """
-      Face of a card.
-      Ace is 1, Jack is 11, Knight is 12, King is 13.
-    """
-    @type face() :: :ace | :jack | :king | :knight | :none
     defstruct [:suit, :rank]
 
     @type t() :: %__MODULE__{
@@ -62,20 +57,6 @@ defmodule Briscola do
         12 -> 3
         11 -> 2
         _ -> 0
-      end
-    end
-
-    @doc """
-      Returns the face of a card.
-    """
-    @spec face(Card.t()) :: face()
-    def face(%Card{:rank => rank}) do
-      case rank do
-        1 -> :ace
-        11 -> :jack
-        12 -> :knight
-        13 -> :king
-        _ -> :none
       end
     end
   end

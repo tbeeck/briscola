@@ -18,30 +18,6 @@ defmodule BriscolaTest do
     end
   end
 
-  describe "faces" do
-    test "1 is ace" do
-      assert :ace == Briscola.Card.face(%Briscola.Card{rank: 1, suit: :cups})
-    end
-
-    test "11 is jack" do
-      assert :jack == Briscola.Card.face(%Briscola.Card{rank: 11, suit: :cups})
-    end
-
-    test "12 is knight" do
-      assert :knight == Briscola.Card.face(%Briscola.Card{rank: 12, suit: :cups})
-    end
-
-    test "13 is king" do
-      assert :king == Briscola.Card.face(%Briscola.Card{rank: 13, suit: :cups})
-    end
-
-    test "other ranks have no face" do
-      Enum.each(2..10, fn rank ->
-        assert :none == Briscola.Card.face(%Briscola.Card{rank: rank, suit: :cups})
-      end)
-    end
-  end
-
   describe "make a new game" do
     test "new game has a deck" do
       game = Briscola.Game.new()
