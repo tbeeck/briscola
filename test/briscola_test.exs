@@ -185,6 +185,7 @@ defmodule BriscolaTest do
         |> TestGame.action_on(1)
 
       {:ok, game} = Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
+      assert %Briscola.Card{rank: 5, suit: :cups} == List.first(game.trick)
     end
 
     test "cant play nonexistent card" do
