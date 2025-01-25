@@ -101,20 +101,47 @@ defmodule BriscolaTest do
     end
   end
 
-  describe "game rules" do
-    test "one player takes trick" do
-      game = Briscola.Game.new(players: 4)
-      {:ok, game} = Briscola.Game.play(game, 0)
-      {:ok, game} = Briscola.Game.play(game, 0)
-      {:ok, game} = Briscola.Game.play(game, 0)
-      {:ok, game} = Briscola.Game.play(game, 0)
-      assert {:error, :trick_over} == Briscola.Game.play(game, 0)
-      {:ok, game, _winning_player} = Briscola.Game.score_trick(game)
+  describe "player turn-taking" do
+    test "can play specific card" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.hand(1, [%Briscola.Card{rank: 5, suit: :cups}])
+        |> TestGame.action_on(1)
 
-      assert 1 == Enum.count(game.players, fn player -> length(player.pile) == 4 end)
-      assert 4 == Enum.count(game.players, fn player -> length(player.hand) == 2 end)
+      {:ok, game} = Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
+      assert %Briscola.Card{rank: 5, suit: :cups} == List.first(game.trick)
     end
 
+    test "can't play nonexistent card" do
+      game =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([%Briscola.Card{rank: 3, suit: :cups}])
+        |> TestGame.hand(1, [%Briscola.Card{rank: 4, suit: :cups}])
+        |> TestGame.action_on(1)
+
+      assert {:error, :invalid_card} ==
+               Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
+    end
+
+    test "playing a card moves action to the next player" do
+      turn_order = %{0 => 1, 1 => 2, 2 => 3, 3 => 0}
+
+      scenario =
+        TestGame.new(players: 4)
+        |> TestGame.briscola(%Briscola.Card{rank: 1, suit: :cups})
+        |> TestGame.fill_hands(3)
+
+      Enum.each(turn_order, fn {pa, pb} ->
+        {:ok, next_turn} = scenario |> TestGame.action_on(pa) |> Briscola.Game.play(0)
+        assert pb == next_turn.action_on
+      end)
+    end
+  end
+
+  describe "trick scoring" do
     test "cannot prematurely score trick" do
       game = Briscola.Game.new(players: 4)
       assert {:error, :trick_not_over} == Briscola.Game.score_trick(game)
@@ -198,30 +225,25 @@ defmodule BriscolaTest do
       assert 2 == length(Enum.at(game.players, 1).pile)
     end
 
-    test "can play specific card" do
+    test "high rank wins if played before low rank" do
       game =
         TestGame.new(players: 2)
         |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
-        |> TestGame.trick([%Briscola.Card{rank: 4, suit: :cups}])
-        |> TestGame.hand(1, [%Briscola.Card{rank: 5, suit: :cups}])
-        |> TestGame.action_on(1)
-
-      {:ok, game} = Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
-      assert %Briscola.Card{rank: 5, suit: :cups} == List.first(game.trick)
-    end
-
-    test "can't play nonexistent card" do
-      game =
-        TestGame.new(players: 2)
-        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
-        |> TestGame.trick([%Briscola.Card{rank: 3, suit: :cups}])
+        |> TestGame.trick([%Briscola.Card{rank: 5, suit: :cups}])
         |> TestGame.hand(1, [%Briscola.Card{rank: 4, suit: :cups}])
         |> TestGame.action_on(1)
 
-      assert {:error, :invalid_card} ==
-               Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
-    end
+      {:ok, game} = Briscola.Game.play(game, 0)
 
+      {:ok, game, winning_player} = Briscola.Game.score_trick(game)
+
+      # First player played a higher rank
+      assert 0 == winning_player
+      assert 2 == length(Enum.at(game.players, 0).pile)
+    end
+  end
+
+  describe "dealing" do
     test "cannot redeal before trick is scored" do
       game =
         TestGame.new(players: 2)
@@ -262,11 +284,11 @@ defmodule BriscolaTest do
       assert Enum.all?(game.players, fn p -> length(p.hand) == 3 end)
     end
 
-    test "last player gets briscola card on final redeal" do
+    test "last player gets briscola card on final redeal with 2 players" do
       briscola = %Briscola.Card{rank: 1, suit: :cups}
 
       # Player 1 wins the trick
-      {:ok, gamme, 0} =
+      {:ok, game, 0} =
         TestGame.new(players: 2)
         |> TestGame.trick([
           %Briscola.Card{rank: 2, suit: :cups},
@@ -285,11 +307,37 @@ defmodule BriscolaTest do
         |> TestGame.deck([%Briscola.Card{rank: 4, suit: :cups}])
         |> Briscola.Game.score_trick()
 
-      game = Briscola.Game.redeal(gamme)
+      game = Briscola.Game.redeal(game)
 
       # Player 2 lost so they get the briscola card
       p2 = Enum.at(game.players, 1)
       assert Enum.any?(p2.hand, fn card -> card == briscola end)
+    end
+
+    test "last player gets briscola card on final redeal with 4 players" do
+      briscola = %Briscola.Card{rank: 1, suit: :cups}
+
+      # Player 1 wins the trick
+      {:ok, game, 0} =
+        TestGame.new(players: 4)
+        |> TestGame.trick([
+          %Briscola.Card{rank: 4, suit: :cups},
+          %Briscola.Card{rank: 5, suit: :cups},
+          %Briscola.Card{rank: 6, suit: :cups},
+          %Briscola.Card{rank: 7, suit: :cups}
+        ])
+        |> TestGame.action_on(0)
+        |> TestGame.briscola(briscola)
+        |> TestGame.deck(
+          Enum.reduce(8..10, [], fn i, acc -> [%Briscola.Card{rank: i, suit: :cups} | acc] end)
+        )
+        |> Briscola.Game.score_trick()
+
+      game = Briscola.Game.redeal(game)
+
+      # Player 4 is furthest from player 1, they get the briscola
+      p4 = Enum.at(game.players, 3)
+      assert Enum.any?(p4.hand, fn card -> card == briscola end)
     end
   end
 

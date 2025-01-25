@@ -122,9 +122,9 @@ defmodule Briscola.Game do
         cond do
           best == nil -> card
           card.suit == trump && best.suit != trump -> card
-          card.suit == trump && best.suit == trump && Card.score(card) > Card.score(best) -> card
+          card.suit == trump && best.suit == trump && Card.strength(card) > Card.strength(best) -> card
           card.suit == lead && best.suit != trump -> card
-          card.suit == lead && best.suit == lead && Card.score(card) > Card.score(best) -> card
+          card.suit == lead && best.suit == lead && Card.strength(card) > Card.strength(best) -> card
           true -> best
         end
       end)

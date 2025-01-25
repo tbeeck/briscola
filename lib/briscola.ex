@@ -10,7 +10,7 @@ defmodule Briscola do
     :swords
   ]
   @doc """
-    Returns a list of the suits of the cards.
+  Returns a list of the suits of the cards.
   """
   def suits(), do: @suits
 
@@ -22,17 +22,17 @@ defmodule Briscola do
 
   defmodule Card do
     @moduledoc """
-      Struct for a card in the game of Briscola.
-      https://en.m.wikipedia.org/wiki/Italian_playing_cards
+    Struct for a card in the game of Briscola.
+    https://en.m.wikipedia.org/wiki/Italian_playing_cards
     """
 
     @typedoc """
-      Suit of a card.
+    Suit of a card.
     """
     @type suit() :: :cups | :batons | :coins | :swords
 
     @typedoc """
-      Valid ranks for a card.
+    Valid ranks for a card.
     """
     @type rank() :: 1..13
 
@@ -44,9 +44,7 @@ defmodule Briscola do
           }
 
     @doc """
-      Returns the score of a card.
-      This score is used for comparing what card wins a trick,
-      and for calculating the player's final score.
+    Returns the score of a card, used for calculating a player's score.
     """
     @spec score(Card.t()) :: integer()
     def score(%Card{rank: rank}) do
@@ -59,11 +57,21 @@ defmodule Briscola do
         _ -> 0
       end
     end
+
+    @doc """
+    Returns the strength of a card, used to determine a trick winner.
+    """
+    def strength(%Card{rank: rank} = card) do
+      case score(card) do
+        0 -> rank
+        value -> value
+      end
+    end
   end
 
   defmodule Deck do
     @moduledoc """
-      Struct for a deck of cards in the game of Briscola.
+    Struct for a deck of cards in the game of Briscola.
     """
     defstruct [:cards]
 
@@ -72,7 +80,7 @@ defmodule Briscola do
           }
 
     @doc """
-      Create a new deck of cards, not shuffled.
+    Create a new deck of cards, not shuffled.
     """
     @spec new() :: Deck.t()
     def new() do
@@ -85,15 +93,15 @@ defmodule Briscola do
     end
 
     @doc """
-      Shuffle a deck of cards.
+    Shuffle a deck of cards.
     """
     def shuffle(%Deck{cards: cards}) do
       %Deck{cards: Enum.shuffle(cards)}
     end
 
     @doc """
-      Take a number of cards from the top of the deck.
-      The top of the deck is the beginning of the list of cards.
+    Take a number of cards from the top of the deck.
+    The top of the deck is the beginning of the list of cards.
     """
     @spec take(Deck.t(), integer()) :: {Deck.t(), [Card.t()]}
     def take(%Deck{cards: cards} = deck, n) do
@@ -104,9 +112,9 @@ defmodule Briscola do
 
   defmodule Player do
     @moduledoc """
-      Struct for a player in the game of Briscola.
-      Players have a hand of playing cards and a pile of won cards.
-      The pile of won cards are used for scoring.
+    Struct for a player in the game of Briscola.
+    Players have a hand of playing cards and a pile of won cards.
+    The pile of won cards are used for scoring.
     """
     defstruct [:hand, :pile]
 
@@ -124,8 +132,8 @@ defmodule Briscola do
     end
 
     @doc """
-      Calculate the score of a player.
-      The score is the sum of the scores of the cards in the player's pile.
+    Calculate the score of a player.
+    The score is the sum of the scores of the cards in the player's pile.
     """
     @spec score(Player.t()) :: integer()
     def score(%Player{pile: pile}) do
@@ -133,7 +141,7 @@ defmodule Briscola do
     end
 
     @doc """
-      Remove a specific card from a player's hand.
+    Remove a specific card from a player's hand.
     """
     @spec remove_from_hand(Player.t(), Card.t()) :: t()
     def remove_from_hand(player, card) do
