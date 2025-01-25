@@ -241,7 +241,33 @@ defmodule BriscolaTest do
     end
 
     test "last player gets briscola card on final redeal" do
-      # todo
+      briscola = %Briscola.Card{rank: 1, suit: :cups}
+
+      # Player 1 wins the trick
+      {:ok, gamme, 0} =
+        TestGame.new(players: 2)
+        |> TestGame.trick([
+          %Briscola.Card{rank: 2, suit: :cups},
+          %Briscola.Card{rank: 3, suit: :cups}
+        ])
+        |> TestGame.action_on(0)
+        |> TestGame.hand(0, [
+          %Briscola.Card{rank: 1, suit: :batons},
+          %Briscola.Card{rank: 2, suit: :batons}
+        ])
+        |> TestGame.hand(1, [
+          %Briscola.Card{rank: 3, suit: :batons},
+          %Briscola.Card{rank: 4, suit: :batons}
+        ])
+        |> TestGame.briscola(briscola)
+        |> TestGame.deck([%Briscola.Card{rank: 4, suit: :cups}])
+        |> Briscola.Game.score_trick()
+
+      game = Briscola.Game.redeal(gamme)
+
+      # Player 2 should get the briscola card
+      p2 = Enum.at(game.players, 1)
+      assert Enum.any?(p2.hand, fn card -> card == briscola end)
     end
   end
 
@@ -300,17 +326,24 @@ defmodule BriscolaTest do
       assert 52 - (3 * 4 + 4) - 1 == length(game.deck.cards)
     end
 
-    test "sim all tricks" do
+    test "fuzz" do
       players = 4
       tricks_to_complete = Integer.floor_div(52, players)
 
-      game =
-        Enum.reduce(1..tricks_to_complete, Briscola.Game.new(players: players), fn _, game_acc ->
-          TestGame.sim_trick(game_acc)
-        end)
+      Enum.each(1..10_000, fn _ ->
+        game =
+          1..tricks_to_complete
+          |> Enum.reduce(Briscola.Game.new(players: players), fn _, game_acc ->
+            TestGame.sim_trick(game_acc)
+          end)
 
-      assert 0 == length(game.deck.cards)
-      assert 52 == Enum.reduce(game.players, 0, fn player, acc -> acc + length(player.pile) end)
+        assert 0 == length(game.deck.cards)
+        assert 52 = Enum.sum_by(game.players, fn player -> length(player.pile) end)
+        assert Enum.all?(game.players, fn player -> length(player.hand) == 0 end)
+
+        assert 120 ==
+                 Enum.sum_by(game.players, fn player -> Briscola.Player.score(player) end)
+      end)
     end
   end
 end

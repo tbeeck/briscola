@@ -105,4 +105,11 @@ defmodule Briscola.GameFixture do
       _ -> Game.redeal(game)
     end
   end
+
+  def deck(game, cards) do
+    %Briscola.Game{
+      game
+      | deck: %Deck{cards: cards}
+    }
+  end
 end
