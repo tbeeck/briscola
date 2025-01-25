@@ -14,7 +14,7 @@ defmodule Briscola do
   """
   def suits(), do: @suits
 
-  @ranks 1..13
+  @ranks 1..10
   @doc """
     Returns a range rempresenting the ranks of the cards.
   """
@@ -34,7 +34,7 @@ defmodule Briscola do
     @typedoc """
     Valid ranks for a card.
     """
-    @type rank() :: 1..13
+    @type rank() :: 1..10
 
     defstruct [:suit, :rank]
 
@@ -51,9 +51,9 @@ defmodule Briscola do
       case rank do
         1 -> 11
         3 -> 10
-        13 -> 4
-        12 -> 3
-        11 -> 2
+        10 -> 4
+        9 -> 3
+        8 -> 2
         _ -> 0
       end
     end

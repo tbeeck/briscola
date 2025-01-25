@@ -7,8 +7,7 @@ defmodule BriscolaTest do
 
   describe "deck" do
     test "new deck has right number of cards" do
-      # 4 Suits, 13 ranks
-      assert 4 * 13 == length(Briscola.Deck.new().cards)
+      assert 4 * 10 == length(Briscola.Deck.new().cards)
     end
 
     test "shuffled deck is different" do
@@ -351,15 +350,15 @@ defmodule BriscolaTest do
     end
 
     test "score kings" do
-      assert 4 == Briscola.Card.score(%Briscola.Card{rank: 13, suit: :cups})
+      assert 4 == Briscola.Card.score(%Briscola.Card{rank: 10, suit: :cups})
     end
 
     test "score knights" do
-      assert 3 == Briscola.Card.score(%Briscola.Card{rank: 12, suit: :cups})
+      assert 3 == Briscola.Card.score(%Briscola.Card{rank: 9, suit: :cups})
     end
 
     test "score jacks" do
-      assert 2 == Briscola.Card.score(%Briscola.Card{rank: 11, suit: :cups})
+      assert 2 == Briscola.Card.score(%Briscola.Card{rank: 8, suit: :cups})
     end
 
     test "score other cards" do
@@ -372,9 +371,9 @@ defmodule BriscolaTest do
         pile: [
           %Briscola.Card{rank: 1, suit: :cups},
           %Briscola.Card{rank: 3, suit: :cups},
-          %Briscola.Card{rank: 13, suit: :cups},
-          %Briscola.Card{rank: 12, suit: :cups},
-          %Briscola.Card{rank: 11, suit: :cups},
+          %Briscola.Card{rank: 10, suit: :cups},
+          %Briscola.Card{rank: 9, suit: :cups},
+          %Briscola.Card{rank: 8, suit: :cups},
           %Briscola.Card{rank: 2, suit: :cups}
         ]
       }
@@ -389,16 +388,16 @@ defmodule BriscolaTest do
         Briscola.Game.new(players: 4)
         |> TestGame.sim_trick()
 
-      # Original deck: 52 cards
+      # Original deck: 40 cards
       # initial deal: 3 cards for 4 players
       # next deal: 3 cards for 4 players
       # briscola: 1
-      assert 52 - (3 * 4 + 4) - 1 == length(game.deck.cards)
+      assert 40 - (3 * 4 + 4) - 1 == length(game.deck.cards)
     end
 
     test "fuzz" do
       players = 4
-      tricks_to_complete = Integer.floor_div(52, players)
+      tricks_to_complete = Integer.floor_div(40, players)
 
       Enum.each(1..10_000, fn _ ->
         game =
@@ -408,7 +407,7 @@ defmodule BriscolaTest do
           end)
 
         assert 0 == length(game.deck.cards)
-        assert 52 = Enum.sum_by(game.players, fn player -> length(player.pile) end)
+        assert 40 = Enum.sum_by(game.players, fn player -> length(player.pile) end)
         assert Enum.all?(game.players, fn player -> length(player.hand) == 0 end)
 
         assert 120 ==
