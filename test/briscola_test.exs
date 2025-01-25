@@ -289,20 +289,12 @@ defmodule BriscolaTest do
       # Player 1 wins the trick
       {:ok, game, 0} =
         TestGame.new(players: 2)
+        |> TestGame.briscola(briscola)
         |> TestGame.trick([
           %Briscola.Card{rank: 2, suit: :cups},
           %Briscola.Card{rank: 3, suit: :cups}
         ])
         |> TestGame.action_on(0)
-        |> TestGame.hand(0, [
-          %Briscola.Card{rank: 1, suit: :batons},
-          %Briscola.Card{rank: 2, suit: :batons}
-        ])
-        |> TestGame.hand(1, [
-          %Briscola.Card{rank: 3, suit: :batons},
-          %Briscola.Card{rank: 4, suit: :batons}
-        ])
-        |> TestGame.briscola(briscola)
         |> TestGame.deck([%Briscola.Card{rank: 4, suit: :cups}])
         |> Briscola.Game.score_trick()
 
