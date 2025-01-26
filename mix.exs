@@ -16,6 +16,7 @@ defmodule Briscola.MixProject do
           ~r"String\.Chars\.Briscola\..*"
         ]
       ],
+      package: package(),
 
       # Docs
       name: "Briscola",
@@ -44,6 +45,16 @@ defmodule Briscola.MixProject do
     [
       main: "Briscola",
       extras: ["README.md"]
+    ]
+  end
+
+  defp package do
+    [
+      name: "briscola",
+      description: "Briscola card game, rules, and simulation utilities.",
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/tbeeck/briscola"}
     ]
   end
 end
