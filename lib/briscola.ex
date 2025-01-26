@@ -150,3 +150,9 @@ defmodule Briscola do
     end
   end
 end
+
+defimpl String.Chars, for: Briscola.Card do
+  def to_string(card) do
+    "(#{card.rank}, #{card.suit})"
+  end
+end
