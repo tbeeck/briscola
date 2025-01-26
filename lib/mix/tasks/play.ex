@@ -10,7 +10,6 @@ defmodule Mix.Tasks.Briscola.Play do
   Accepts the following arguments:
     * `--players` or `-p`: The number of players in the game. Default is 2.
     * `--strategies` or `-s`: A comma-separated list of AI strategies to use.
-      The first strategy will be used by the player, the rest by AI.
       By default AI will select random cards.
       The strategy name is the module name, i.e. "Briscola.Strategy.Random".
   """
