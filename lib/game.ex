@@ -95,7 +95,14 @@ defmodule Briscola.Game do
     end
   end
 
-  def score_trick(game) when length(game.trick) != length(game.players) do
+  @doc """
+  Score the current trick, moving the cards to the winning player's pile.
+  Also clears the trick and sets the action to the winning player.
+  """
+  @spec score_trick(t()) :: {:ok, t(), non_neg_integer()} | {:error, :trick_not_over}
+  def score_trick(game)
+
+  def score_trick(%Game{} = game) when length(game.trick) != length(game.players) do
     {:error, :trick_not_over}
   end
 
@@ -148,6 +155,15 @@ defmodule Briscola.Game do
     winning_player_index = abs(rem(game.action_on + winning_card_index, length(game.players)))
     {winning_player_index, winning_card}
   end
+
+  @doc """
+  Redistribute one card to each player, call this after scoring a trick.
+
+  Since the last few turns of the game don't have enough cards to deal to all players,
+  it's normal to get back {:error, :not_enough_cards} on the last few turns.
+  """
+  @spec redeal(t()) :: t() | {:error, :trick_not_scored | :not_enough_cards}
+  def redeal(game)
 
   def redeal(game) when length(game.trick) != 0 do
     {:error, :trick_not_scored}
