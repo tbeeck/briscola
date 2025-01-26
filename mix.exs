@@ -15,7 +15,12 @@ defmodule Briscola.MixProject do
           Mix.Tasks.Briscola.Play,
           ~r"String\.Chars\.Briscola\..*"
         ]
-      ]
+      ],
+
+      # Docs
+      name: "Briscola",
+      source_url: "https://github.com/tbeeck/briscola",
+      docs: &docs/0
     ]
   end
 
@@ -30,6 +35,15 @@ defmodule Briscola.MixProject do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    []
+    [
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "Briscola",
+      extras: ["README.md"]
+    ]
   end
 end
