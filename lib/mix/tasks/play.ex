@@ -1,6 +1,11 @@
 defmodule Mix.Tasks.Briscola.Play do
   @moduledoc """
   A mix task to play Briscola.
+
+  This task will start a game of Briscola and allow the player to play against AI.
+
+  Enter the number of the card in your hand that you want to play when prompted.
+  (1 for the first card, 2 for the second, etc.)
   """
   use Mix.Task
 
@@ -16,6 +21,7 @@ defmodule Mix.Tasks.Briscola.Play do
   defp next_turn(:ok), do: nil
 
   defp next_turn(%Game{} = game) do
+    Process.sleep(500)
     cond do
       Game.game_over?(game) ->
         print_winner(game)

@@ -1,7 +1,7 @@
 defmodule BriscolaTest do
   use ExUnit.Case
 
-  alias Briscola.GameFixture, as: TestGame
+  alias BriscolaTest.GameFixture, as: TestGame
 
   doctest Briscola
 

@@ -11,8 +11,8 @@ defmodule Briscola.MixProject do
       deps: deps(),
       test_coverage: [
         ignore_modules: [
-          Briscola.GameFixture,
           Mix.Tasks.Briscola.Play,
+          ~r"BriscolaTest.*",
           ~r"String\.Chars\.Briscola\..*"
         ]
       ],

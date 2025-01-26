@@ -1,4 +1,4 @@
-defmodule Briscola.GameFixture do
+defmodule BriscolaTest.GameFixture do
   alias Briscola.Player
   alias Briscola.Card
   alias Briscola.Deck
