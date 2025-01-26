@@ -9,7 +9,13 @@ defmodule Briscola.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      test_coverage: [ignore_modules: [Briscola.GameFixture, Mix.Tasks.Briscola.Play]]
+      test_coverage: [
+        ignore_modules: [
+          Briscola.GameFixture,
+          Mix.Tasks.Briscola.Play,
+          ~r"String\.Chars\.Briscola\..*"
+        ]
+      ]
     ]
   end
 
