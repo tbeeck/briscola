@@ -19,63 +19,6 @@ defmodule Mix.Tasks.Briscola.Play do
   alias Briscola.Game
   alias Briscola.Strategy.Simulator
 
-  defmodule PlayerStrategy do
-    @doc """
-    Briscola strategy that asks the player to choose a card to play.
-    """
-    @behaviour Briscola.Strategy
-    @impl true
-    def choose_card(game, _player_index) do
-      print_player_state(game)
-      ask_choice(game)
-    end
-
-    def ask_choice(%Game{} = game) do
-      hand = Enum.at(game.players, 0).hand
-      IO.puts("Choose a card to play (1-#{length(hand)}):")
-
-      val =
-        case IO.gets("> ") |> String.trim() |> Integer.parse() do
-          {input, _} when input > 0 and input <= length(hand) ->
-            input
-
-          _ ->
-            IO.puts("Invalid input, try again!")
-            ask_choice(game)
-        end
-
-      card_index = val - 1
-      card_index
-    end
-
-    defp print_player_state(%Game{} = game) do
-      me = Enum.at(game.players, 0)
-
-      briscola_str =
-        "\t" <>
-          "Briscola is #{game.briscola}"
-
-      hand_str =
-        "\t" <>
-          case length(me.hand) do
-            0 -> "No more cards in hand!"
-            _ -> "Hand: #{Enum.join(me.hand, ", ")}"
-          end
-
-      trick_str =
-        "\t" <>
-          case length(game.trick) do
-            0 -> "Trick is empty"
-            _ -> "Trick: #{Enum.join(game.trick, ", ")}"
-          end
-
-      cards_remaining_str = "\t" <> "Draw pile remaining: #{length(game.deck.cards)} + briscola"
-
-      status = [briscola_str, trick_str, cards_remaining_str, hand_str] |> Enum.join("\n")
-      IO.puts("Status: \n #{status}")
-    end
-  end
-
   @shortdoc "Play Briscola"
   def run(args) do
     IO.puts("Welcome to Briscola!")
@@ -86,7 +29,7 @@ defmodule Mix.Tasks.Briscola.Play do
         aliases: [p: :players, s: :strategies]
       )
 
-    player_count = Keyword.get(opts, :players, 2)
+    player_count = Keyword.get(opts, :players, 4)
 
     ai_strategies =
       case Keyword.get(opts, :strategies) do
@@ -100,7 +43,7 @@ defmodule Mix.Tasks.Briscola.Play do
       end
 
     # Player zero uses the player strategy
-    strategies = [PlayerStrategy | ai_strategies]
+    strategies = [Briscola.Strategy.Player | ai_strategies]
     game = Briscola.Game.new(players: player_count)
 
     sim =
@@ -111,6 +54,8 @@ defmodule Mix.Tasks.Briscola.Play do
   end
 
   defp handle_game_message(_game, msg) do
+    Process.sleep(300)
+
     case msg do
       {:game_over, _} -> IO.puts("Game over!")
       {:trick_winner, winner} -> IO.puts("Player #{winner} won the trick! Next round.\n")
