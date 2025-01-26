@@ -36,5 +36,11 @@ defmodule BriscolaTest.Simulator do
       # End of the log is the beginning
       assert :game_over == elem(List.first(sim.log), 0)
     end
+
+    test "cannot create a simulator with mismatched strategies" do
+      game = Game.new(players: 2)
+      strategies = [Strategy.Random]
+      assert_raise ArgumentError, fn -> Simulator.new(game, strategies) end
+    end
   end
 end
