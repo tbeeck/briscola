@@ -348,6 +348,31 @@ defmodule BriscolaTest do
       p4 = Enum.at(game.players, 3)
       assert Enum.any?(p4.hand, fn card -> card == briscola end)
     end
+
+    test "players keep their original cards" do
+      initial_state =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 1, suit: :cups})
+        |> TestGame.trick([
+          %Briscola.Card{rank: 2, suit: :cups},
+          %Briscola.Card{rank: 3, suit: :cups}
+        ])
+        |> TestGame.fill_hands(2)
+
+      after_redeal =
+        Briscola.Game.score_trick(initial_state)
+        |> elem(1)
+        |> Briscola.Game.redeal()
+
+      old_p1_hand = Enum.at(initial_state.players, 0).hand
+      old_p2_hand = Enum.at(initial_state.players, 1).hand
+      new_p1_hand = Enum.at(after_redeal.players, 0).hand
+      new_p2_hand = Enum.at(after_redeal.players, 1).hand
+
+      # Check all the previous cards are in the new hands
+      assert Enum.all?(old_p1_hand, fn card -> Enum.any?(new_p1_hand, fn c -> c == card end) end)
+      assert Enum.all?(old_p2_hand, fn card -> Enum.any?(new_p2_hand, fn c -> c == card end) end)
+    end
   end
 
   describe "scoring" do
