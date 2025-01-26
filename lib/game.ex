@@ -175,27 +175,23 @@ defmodule Briscola.Game do
     end
   end
 
-  defp deal_cards(game, n) do
+  defp deal_cards(%Game{} = game, n) do
     {new_deck, cards} = Deck.take(game.deck, n * length(game.players))
 
-    final_player_index =
-      case game.action_on do
-        0 -> length(game.players)
-        i -> i - 1
-      end
-
-    # To deal cards in the correct order, partition the list
-    # so that the winner is at the beginning.
-    {l_players, r_players} =
-      Enum.split(game.players, final_player_index)
-
+    # "Rotate" the list so the winner of the last trick gets the first
+    # batch of cards, and the player fursthest from the action gets the last.
+    # This ensures the last player gets the briscola on the last dealing.
     new_players =
-      (r_players ++ l_players)
+      Enum.split(game.players, game.action_on)
+      |> Tuple.to_list()
+      |> Enum.reverse()
+      |> Enum.concat()
       |> Enum.zip(Enum.chunk_every(cards, n))
       |> Enum.map(fn {player, new_cards} ->
         %Player{player | hand: player.hand ++ new_cards}
       end)
-      |> Enum.split(length(game.players) - final_player_index)
+      # Rotate the list back so players are in their original positions.
+      |> Enum.split(length(game.players) - game.action_on)
       |> Tuple.to_list()
       |> Enum.reverse()
       |> Enum.concat()

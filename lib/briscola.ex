@@ -5,12 +5,12 @@ defmodule Briscola do
 
   @suits [
     :cups,
-    :batons,
     :coins,
-    :swords
+    :swords,
+    :batons
   ]
   @doc """
-  Returns a list of the suits of the cards.
+  Returns a list of the suits for briscola cards.
   """
   def suits(), do: @suits
 
@@ -29,7 +29,7 @@ defmodule Briscola do
     @typedoc """
     Suit of a card.
     """
-    @type suit() :: :cups | :batons | :coins | :swords
+    @type suit() :: :cups | :coins | :swords | :batons
 
     @typedoc """
     Valid ranks for a card.
@@ -62,10 +62,10 @@ defmodule Briscola do
     Returns the strength of a card, used to determine a trick winner.
     """
     def strength(%Card{rank: rank} = card) do
+      # Any scoring card is stronger than a non-scoring card
+      # Offset the score value by 10 to make scoring cards always stronger
       case score(card) do
         0 -> rank
-        # So that we can compare face cards with number cards,
-        # we add 10 to the score of face cards.
         value -> value + 10
       end
     end

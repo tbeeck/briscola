@@ -1,11 +1,10 @@
 # Briscola
 
-**TODO: Add description**
+Implementation of the Italian card game [Briscola](https://en.m.wikipedia.org/wiki/Briscola).
+
+Comes with a mix task to try it out in the command line!
 
 ## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `briscola` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -15,7 +14,12 @@ def deps do
 end
 ```
 
+## Play
+
+```bash
+mix briscola.play
+```
+
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/briscola>.
-
