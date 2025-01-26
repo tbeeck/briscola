@@ -13,6 +13,8 @@ defmodule Mix.Tasks.Briscola.Play do
     next_turn(game)
   end
 
+  defp next_turn(:ok), do: nil
+
   defp next_turn(%Game{} = game) do
     cond do
       game_over?(game) ->
@@ -26,15 +28,15 @@ defmodule Mix.Tasks.Briscola.Play do
           {:error, :not_enough_cards} -> game
           g -> g
         end
-        |> next_turn()
 
       player_turn?(game) ->
-        next_turn(do_player_turn(game))
+        do_player_turn(game)
 
       # AI's turn
       true ->
-        next_turn(do_ai_turn(game))
+        do_ai_turn(game)
     end
+    |> next_turn()
   end
 
   defp should_score_trick?(%Game{} = game) do
@@ -58,13 +60,15 @@ defmodule Mix.Tasks.Briscola.Play do
         _ -> -1
       end
 
+    player_hand = Enum.at(game.players, 0).hand
+
     case Game.play(game, input) do
       {:error, _} ->
         IO.puts("Invalid card, try again!")
         do_player_turn(game)
 
       {:ok, new_game} ->
-        card_to_play = Enum.at(Enum.at(new_game.players, new_game.action_on).hand, 0)
+        card_to_play = Enum.at(player_hand, input)
         IO.puts("You play #{card_to_play}")
         new_game
     end
@@ -91,7 +95,8 @@ defmodule Mix.Tasks.Briscola.Play do
           _ -> "Trick: #{Enum.join(game.trick, ", ")}"
         end
 
-    IO.puts("Status: \n " <> briscola_str <> "\n" <> hand_str <> "\n" <> trick_str)
+    status = [briscola_str, hand_str, trick_str] |> Enum.join("\n")
+    IO.puts("Status: \n #{status}")
   end
 
   defp print_winner(%Game{} = game) do
