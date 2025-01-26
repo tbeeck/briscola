@@ -225,4 +225,30 @@ defmodule Briscola.Game do
   @spec lead_suit(t()) :: Card.suit()
   def lead_suit(game) when length(game.trick) == 0, do: nil
   def lead_suit(game) when length(game.trick) > 0, do: List.last(game.trick).suit
+
+  @doc """
+  Check if the trick is over, i.e. all players have played a card.
+  """
+  @spec should_score_trick?(t()) :: boolean()
+  def should_score_trick?(%Game{} = game) do
+    length(game.trick) == length(game.players)
+  end
+
+  @doc """
+  Check if the game is over, i.e. the deck is empty and all players have no cards.
+  """
+  @spec game_over?(t()) :: boolean()
+  def game_over?(%Game{} = game) do
+    length(game.deck.cards) == 0 and Enum.all?(game.players, fn p -> length(p.hand) == 0 end)
+  end
+
+  @doc """
+  Return players in order of highest score to lowest.
+  """
+  @spec leaders(t()) :: [Player.t()]
+  def leaders(%Game{} = game) do
+    Enum.with_index(game.players)
+    |> Enum.sort_by(fn {player, _idx} -> Player.score(player) end, &>=/2)
+    |> Enum.map(&elem(&1, 1))
+  end
 end

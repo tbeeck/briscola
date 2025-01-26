@@ -17,10 +17,10 @@ defmodule Mix.Tasks.Briscola.Play do
 
   defp next_turn(%Game{} = game) do
     cond do
-      game_over?(game) ->
+      Game.game_over?(game) ->
         print_winner(game)
 
-      should_score_trick?(game) ->
+      Game.should_score_trick?(game) ->
         {:ok, game, trick_winner} = Game.score_trick(game)
         IO.puts("Player #{trick_winner} won the trick! Next round.\n")
 
@@ -37,10 +37,6 @@ defmodule Mix.Tasks.Briscola.Play do
         do_ai_turn(game)
     end
     |> next_turn()
-  end
-
-  defp should_score_trick?(%Game{} = game) do
-    length(game.trick) == length(game.players)
   end
 
   defp do_ai_turn(%Game{} = game) do
@@ -117,11 +113,6 @@ defmodule Mix.Tasks.Briscola.Play do
     IO.puts(final)
   end
 
-  defp game_over?(%Game{} = game) do
-    length(game.deck.cards) == 0 and Enum.all?(game.players, fn p -> length(p.hand) == 0 end)
-  end
-
   # Player is always player 0
   defp player_turn?(game), do: game.action_on == 0
-
 end
