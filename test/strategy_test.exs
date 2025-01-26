@@ -1,8 +1,6 @@
 defmodule BriscolaTest.Strategy do
   use ExUnit.Case
 
-  alias Briscola.GameFixture, as: TestGame
-
   describe "Strongest" do
     alias Briscola.Strategy.Strongest
 
@@ -24,10 +22,10 @@ defmodule BriscolaTest.Strategy do
     alias Briscola.Strategy.Random
 
     test "chooses a random card from the player's hand" do
-      game = TestGame.new()
+      game = Briscola.Game.new()
       player_index = 0
       hand_length = length(Enum.at(game.players, player_index).hand)
-      assert Random.choose_card(game, player_index) in 0..(hand_length - 1)
+      assert Random.choose_card(game, player_index) in 0..(hand_length - 1)//1
     end
   end
 end
