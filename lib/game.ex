@@ -180,7 +180,7 @@ defmodule Briscola.Game do
 
     final_player_index =
       case game.action_on do
-        0 -> length(game.players) - 1
+        0 -> length(game.players)
         i -> i - 1
       end
 
@@ -197,6 +197,7 @@ defmodule Briscola.Game do
       end)
       |> Enum.split(length(game.players) - final_player_index)
       |> Tuple.to_list()
+      |> Enum.reverse()
       |> Enum.concat()
 
     %Game{game | deck: new_deck, players: new_players}
