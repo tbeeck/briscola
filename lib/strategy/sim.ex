@@ -23,6 +23,7 @@ defmodule Briscola.Strategy.Simulator do
 
   @doc """
   Create a new simulator with a game and a list of strategies.
+  Player 0 will use the first strategy, player 1 the second, and so on.
   """
   @spec new([module()], new_options()) :: t()
   def new(game, strategies)

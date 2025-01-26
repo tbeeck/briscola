@@ -1,6 +1,8 @@
 defmodule Briscola do
   @moduledoc """
-  `Briscola` card game concepts and rules.
+  Module for the card game Briscola.
+  Contains modules for cards, decks, players, the game itself,
+  as well as a behavior for implementing game strategies.
   """
 
   @suits [
@@ -10,13 +12,13 @@ defmodule Briscola do
     :batons
   ]
   @doc """
-  Returns a list of the suits for briscola cards.
+  Returns a list of the valid suits for briscola cards.
   """
   def suits(), do: @suits
 
   @ranks 1..10
   @doc """
-    Returns a range rempresenting the ranks of the cards.
+    Returns a range representing the ranks of the cards.
   """
   def ranks(), do: @ranks
 
@@ -27,12 +29,12 @@ defmodule Briscola do
     """
 
     @typedoc """
-    Suit of a card.
+    The suit of a card.
     """
     @type suit() :: :cups | :coins | :swords | :batons
 
     @typedoc """
-    Valid ranks for a card.
+    Possible ranks for a card in a stripped Italian deck.
     """
     @type rank() :: 1..10
 
@@ -44,7 +46,7 @@ defmodule Briscola do
           }
 
     @doc """
-    Returns the score of a card, used for calculating a player's score.
+    Returns the point value of a card
     """
     @spec score(Card.t()) :: integer()
     def score(%Card{rank: rank}) do
@@ -73,7 +75,7 @@ defmodule Briscola do
 
   defmodule Deck do
     @moduledoc """
-    Struct for a deck of cards in the game of Briscola.
+    Struct representing a deck of cards.
     """
     defstruct [:cards]
 
@@ -116,7 +118,7 @@ defmodule Briscola do
     @moduledoc """
     Struct for a player in the game of Briscola.
     Players have a hand of playing cards and a pile of won cards.
-    The pile of won cards are used for scoring.
+    The pile of won cards is used for scoring.
     """
     defstruct [:hand, :pile]
 
