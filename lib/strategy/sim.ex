@@ -6,34 +6,38 @@ defmodule Briscola.Strategy.Simulator do
   alias Briscola.Game
   alias Briscola.Strategy.Simulator
 
-  defstruct [:game, :strategies, :log]
+  defstruct [:game, :strategies, :log, :on_message]
 
   @type t() :: %__MODULE__{
           game: Game.t(),
           strategies: [module()],
-          log: [tuple()]
+          log: [log_message()],
+          on_message: (log_message() -> any())
         }
-
-  @type new_options() :: [game: Game.t(), players: 2 | 4]
 
   @type log_message() ::
           {:game_over, [Briscola.Player.t()]}
           | {:trick_winner, integer()}
           | {:player_turn, integer(), Briscola.Card.t()}
 
+  @type new_options() :: [on_message: (Game.t(), log_message() -> any())]
+
   @doc """
   Create a new simulator with a game and a list of strategies.
   Player 0 will use the first strategy, player 1 the second, and so on.
   """
   @spec new([module()], new_options()) :: t()
-  def new(game, strategies)
+  def new(game, strategies, opts \\ [])
 
-  def new(game, strategies) when length(game.players) != length(strategies) do
+  def new(game, strategies, _opts) when length(game.players) != length(strategies) do
     raise ArgumentError, "Number of strategies must match the number of players"
   end
 
-  def new(game, strategies) do
-    %Simulator{game: game, strategies: strategies, log: []}
+  def new(game, strategies, opts) do
+    message_handler =
+      Keyword.get(opts, :on_message, Keyword.get(opts, :on_message, fn _, _ -> nil end))
+
+    %Simulator{game: game, strategies: strategies, log: [], on_message: message_handler}
   end
 
   @doc """
@@ -88,6 +92,7 @@ defmodule Briscola.Strategy.Simulator do
       end
 
     log = [event | log]
+    sim.on_message.(game, event)
 
     case event do
       {:game_over, _} ->

@@ -6,102 +6,116 @@ defmodule Mix.Tasks.Briscola.Play do
 
   Enter the number of the card in your hand that you want to play when prompted.
   (1 for the first card, 2 for the second, etc.)
+
+  Accepts the following arguments:
+    * `--players` or `-p`: The number of players in the game. Default is 2.
+    * `--strategies` or `-s`: A comma-separated list of AI strategies to use.
+      The first strategy will be used by the player, the rest by AI.
+      By default AI will select random cards.
+      The strategy name is the module name, i.e. "Briscola.Strategy.Random".
   """
   use Mix.Task
 
   alias Briscola.Game
+  alias Briscola.Strategy.Simulator
+
+  defmodule PlayerStrategy do
+    @doc """
+    Briscola strategy that asks the player to choose a card to play.
+    """
+    @behaviour Briscola.Strategy
+    @impl true
+    def choose_card(game, _player_index) do
+      print_player_state(game)
+      ask_choice(game)
+    end
+
+    def ask_choice(%Game{} = game) do
+      hand = Enum.at(game.players, 0).hand
+      IO.puts("Choose a card to play (1-#{length(hand)}):")
+
+      val =
+        case IO.gets("> ") |> String.trim() |> Integer.parse() do
+          {input, _} when input > 0 and input <= length(hand) ->
+            input
+
+          _ ->
+            IO.puts("Invalid input, try again!")
+            ask_choice(game)
+        end
+
+      card_index = val - 1
+      card_index
+    end
+
+    defp print_player_state(%Game{} = game) do
+      me = Enum.at(game.players, 0)
+
+      briscola_str =
+        "\t" <>
+          "Briscola is #{game.briscola}"
+
+      hand_str =
+        "\t" <>
+          case length(me.hand) do
+            0 -> "No more cards in hand!"
+            _ -> "Hand: #{Enum.join(me.hand, ", ")}"
+          end
+
+      trick_str =
+        "\t" <>
+          case length(game.trick) do
+            0 -> "Trick is empty"
+            _ -> "Trick: #{Enum.join(game.trick, ", ")}"
+          end
+
+      cards_remaining_str = "\t" <> "Draw pile remaining: #{length(game.deck.cards)} + briscola"
+
+      status = [briscola_str, trick_str, cards_remaining_str, hand_str] |> Enum.join("\n")
+      IO.puts("Status: \n #{status}")
+    end
+  end
 
   @shortdoc "Play Briscola"
-  def run(_args) do
+  def run(args) do
     IO.puts("Welcome to Briscola!")
-    game = Briscola.Game.new(players: 4)
-    next_turn(game)
-  end
 
-  defp next_turn(:ok), do: nil
+    {opts, _, _} =
+      OptionParser.parse(args,
+        switches: [players: :integer, strategies: :string],
+        aliases: [p: :players, s: :strategies]
+      )
 
-  defp next_turn(%Game{} = game) do
-    Process.sleep(500)
-    cond do
-      Game.game_over?(game) ->
-        print_winner(game)
+    player_count = Keyword.get(opts, :players, 2)
 
-      Game.should_score_trick?(game) ->
-        {:ok, game, trick_winner} = Game.score_trick(game)
-        IO.puts("Player #{trick_winner} won the trick! Next round.\n")
+    ai_strategies =
+      case Keyword.get(opts, :strategies) do
+        nil ->
+          List.duplicate(Briscola.Strategy.Random, player_count - 1)
 
-        case Game.redeal(game) do
-          {:error, :not_enough_cards} -> game
-          g -> g
-        end
-
-      player_turn?(game) ->
-        do_player_turn(game)
-
-      # AI's turn
-      true ->
-        do_ai_turn(game)
-    end
-    |> next_turn()
-  end
-
-  defp do_ai_turn(%Game{} = game) do
-    card_to_play = Enum.at(Enum.at(game.players, game.action_on).hand, 0)
-    IO.puts("Player #{game.action_on} plays #{card_to_play}")
-    {:ok, game} = Game.play(game, 0)
-    game
-  end
-
-  defp do_player_turn(%Game{} = game) do
-    print_player_state(game)
-
-    input =
-      try do
-        IO.gets("> ") |> String.trim() |> String.to_integer()
-      catch
-        _ -> -1
+        s ->
+          String.split(s, ",")
+          |> Enum.map(&("Elixir." <> &1))
+          |> Enum.map(&String.to_existing_atom/1)
       end
 
-    player_hand = Enum.at(game.players, 0).hand
-    card_index = input - 1
+    # Player zero uses the player strategy
+    strategies = [PlayerStrategy | ai_strategies]
+    game = Briscola.Game.new(players: player_count)
 
-    case Game.play(game, card_index) do
-      {:error, _} ->
-        IO.puts("Invalid card, try again!")
-        do_player_turn(game)
+    sim =
+      Simulator.new(game, strategies, on_message: &handle_game_message/2)
+      |> Simulator.run()
 
-      {:ok, new_game} ->
-        card_to_play = Enum.at(player_hand, card_index)
-        IO.puts("You play #{card_to_play}")
-        new_game
-    end
+    print_winner(sim.game)
   end
 
-  defp print_player_state(%Game{} = game) do
-    me = Enum.at(game.players, 0)
-
-    briscola_str =
-      "\t" <>
-        "Briscola is #{game.briscola}"
-
-    hand_str =
-      "\t" <>
-        case length(me.hand) do
-          0 -> "No more cards in hand!"
-          _ -> "Hand: #{Enum.join(me.hand, ", ")}"
-        end
-
-    trick_str =
-      "\t" <>
-        case length(game.trick) do
-          0 -> "Trick is empty"
-          _ -> "Trick: #{Enum.join(game.trick, ", ")}"
-        end
-
-    cards_remaining_str = "\t" <> "Draw pile remaining: #{length(game.deck.cards)} + briscola"
-
-    status = [briscola_str, trick_str, cards_remaining_str, hand_str] |> Enum.join("\n")
-    IO.puts("Status: \n #{status}")
+  defp handle_game_message(_game, msg) do
+    case msg do
+      {:game_over, _} -> IO.puts("Game over!")
+      {:trick_winner, winner} -> IO.puts("Player #{winner} won the trick! Next round.\n")
+      {:player_turn, player, card} -> IO.puts("Player #{player} played #{card}")
+    end
   end
 
   defp print_winner(%Game{} = game) do
@@ -118,7 +132,4 @@ defmodule Mix.Tasks.Briscola.Play do
 
     IO.puts(final)
   end
-
-  # Player is always player 0
-  defp player_turn?(game), do: game.action_on == 0
 end
