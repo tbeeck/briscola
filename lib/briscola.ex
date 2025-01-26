@@ -64,7 +64,9 @@ defmodule Briscola do
     def strength(%Card{rank: rank} = card) do
       case score(card) do
         0 -> rank
-        value -> value
+        # So that we can compare face cards with number cards,
+        # we add 10 to the score of face cards.
+        value -> value + 10
       end
     end
   end
@@ -153,6 +155,16 @@ end
 
 defimpl String.Chars, for: Briscola.Card do
   def to_string(card) do
-    "(#{card.rank}, #{card.suit})"
+    "(#{card_title(card)}, #{card.suit})"
+  end
+
+  defp card_title(%Briscola.Card{rank: rank}) do
+    case rank do
+      1 -> "ace"
+      8 -> "jack"
+      9 -> "knight"
+      10 -> "king"
+      _ -> Integer.to_string(rank)
+    end
   end
 end

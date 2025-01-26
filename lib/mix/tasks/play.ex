@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Briscola.Play do
 
       should_score_trick?(game) ->
         {:ok, game, trick_winner} = Game.score_trick(game)
-        IO.puts("Player #{trick_winner} won the trick!")
+        IO.puts("Player #{trick_winner} won the trick! Next round.\n")
 
         case Game.redeal(game) do
           {:error, :not_enough_cards} -> game
@@ -61,14 +61,15 @@ defmodule Mix.Tasks.Briscola.Play do
       end
 
     player_hand = Enum.at(game.players, 0).hand
+    card_index = input - 1
 
-    case Game.play(game, input) do
+    case Game.play(game, card_index) do
       {:error, _} ->
         IO.puts("Invalid card, try again!")
         do_player_turn(game)
 
       {:ok, new_game} ->
-        card_to_play = Enum.at(player_hand, input)
+        card_to_play = Enum.at(player_hand, card_index)
         IO.puts("You play #{card_to_play}")
         new_game
     end
@@ -91,11 +92,13 @@ defmodule Mix.Tasks.Briscola.Play do
     trick_str =
       "\t" <>
         case length(game.trick) do
-          0 -> "Trick is empty! "
+          0 -> "Trick is empty"
           _ -> "Trick: #{Enum.join(game.trick, ", ")}"
         end
 
-    status = [briscola_str, hand_str, trick_str] |> Enum.join("\n")
+    cards_remaining_str = "\t" <> "Draw pile remaining: #{length(game.deck.cards)} + briscola"
+
+    status = [briscola_str, trick_str, cards_remaining_str, hand_str] |> Enum.join("\n")
     IO.puts("Status: \n #{status}")
   end
 
@@ -120,4 +123,5 @@ defmodule Mix.Tasks.Briscola.Play do
 
   # Player is always player 0
   defp player_turn?(game), do: game.action_on == 0
+
 end

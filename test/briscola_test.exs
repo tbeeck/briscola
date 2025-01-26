@@ -258,6 +258,22 @@ defmodule BriscolaTest do
       assert 0 == winning_player
       assert 2 == length(Enum.at(game.players, 0).pile)
     end
+
+    test "high rank wins if played after low rank 4 players" do
+      game =
+        TestGame.new(players: 4)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :batons})
+        |> TestGame.trick([
+          %Briscola.Card{rank: 8, suit: :swords},
+          %Briscola.Card{rank: 8, suit: :cups},
+          %Briscola.Card{rank: 10, suit: :swords},
+          %Briscola.Card{rank: 7, suit: :cups}
+        ])
+        |> TestGame.action_on(0)
+
+      {:ok, _game, winner} = Briscola.Game.score_trick(game)
+      assert winner == 2
+    end
   end
 
   describe "dealing" do

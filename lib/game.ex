@@ -126,10 +126,10 @@ defmodule Briscola.Game do
           card.suit == trump && best.suit != trump ->
             card
 
-          card.suit == trump && best.suit == trump && Card.strength(card) > Card.strength(best) ->
+          card.suit == lead && best.suit != trump && best.suit != lead ->
             card
 
-          card.suit == lead && best.suit != trump ->
+          card.suit == trump && best.suit == trump && Card.strength(card) > Card.strength(best) ->
             card
 
           card.suit == lead && best.suit == lead && Card.strength(card) > Card.strength(best) ->
