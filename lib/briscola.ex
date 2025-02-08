@@ -152,6 +152,14 @@ defmodule Briscola do
       hand = Enum.reject(player.hand, &(&1 == card))
       %Player{player | hand: hand}
     end
+
+    @doc """
+    Add cards to a player's score pile.
+    """
+    @spec take_trick(Player.t(), [Card.t()]) :: t()
+    def take_trick(player, cards) do
+      %Player{player | pile: cards ++ player.pile}
+    end
   end
 end
 

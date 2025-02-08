@@ -10,8 +10,8 @@ defmodule Briscola.Strategy.Simulator do
 
   @type t() :: %__MODULE__{
           game: Game.t(),
-          strategies: [module()],
-          log: [log_message()],
+          strategies: list(module()),
+          log: list(log_message()),
           on_message: (log_message() -> any())
         }
 
@@ -49,7 +49,6 @@ defmodule Briscola.Strategy.Simulator do
   @doc """
   Simulate until the game is over.
   """
-  @spec run(t()) :: t()
   def run(sim) do
     case List.first(sim.log) do
       {:game_over, _} -> sim
@@ -61,7 +60,6 @@ defmodule Briscola.Strategy.Simulator do
   Simulate a single turn in the game.
   That may mean playing a card, scoring a trick then redealing, or ending the game.
   """
-  @spec sim_turn(t()) :: t()
   def sim_turn(%Simulator{} = sim) do
     game = sim.game
     strategies = sim.strategies

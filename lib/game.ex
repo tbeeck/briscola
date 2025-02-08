@@ -60,6 +60,20 @@ defmodule Briscola.Game do
     |> deal_cards(@hand_size)
   end
 
+  @typedoc """
+  Possible errors for the `play/2` function.
+  """
+  @type play_error() :: :trick_over | :must_redeal | :invalid_card
+
+  @doc """
+  Play a card for the current player.
+  Returns an error if the trick is over, or the card is not valid.
+  Cards can be played by the index of the player's hand or by a Card struct.
+  """
+  @spec play(t(), Card.t() | non_neg_integer()) ::
+          {:ok, t()} | {:error, play_error()}
+  def play(game, card)
+
   def play(game, _) when length(game.trick) == length(game.players) do
     {:error, :trick_over}
   end
@@ -69,29 +83,50 @@ defmodule Briscola.Game do
       Enum.at(game.players, game.action_on).hand
       |> Enum.at(card_index)
 
-    if card do
-      play(game, card)
-    else
-      {:error, :invalid_card}
+    play_card(game, card)
+  end
+
+  def play(game, card) when is_struct(card), do: play_card(game, card)
+
+  @spec play_card(t(), Card.t() | nil) :: {:ok, t()} | {:error, play_error()}
+  defp play_card(%Game{} = game, card) do
+    case playable(game, card) do
+      :ok ->
+        new_players =
+          List.update_at(game.players, game.action_on, &Player.remove_from_hand(&1, card))
+
+        game =
+          %Briscola.Game{
+            game
+            | trick: [card | game.trick],
+              action_on: rem(game.action_on + 1, length(game.players)),
+              players: new_players
+          }
+
+        {:ok, game}
+
+      err ->
+        {:error, err}
     end
   end
 
-  def play(game, %Card{} = card) do
-    if card in Enum.at(game.players, game.action_on).hand do
-      new_players =
-        List.update_at(game.players, game.action_on, &Player.remove_from_hand(&1, card))
+  @spec playable(t(), Card.t() | nil) :: play_error() | :ok
+  defp playable(%Game{} = game, card) do
+    cond do
+      should_score_trick?(game) ->
+        :trick_not_over
 
-      game =
-        %Briscola.Game{
-          game
-          | trick: [card | game.trick],
-            action_on: rem(game.action_on + 1, length(game.players)),
-            players: new_players
-        }
+      needs_redeal?(game) ->
+        :must_redeal
 
-      {:ok, game}
-    else
-      {:error, :invalid_card}
+      card == nil ->
+        :invalid_card
+
+      card not in Enum.at(game.players, game.action_on).hand ->
+        :invalid_card
+
+      true ->
+        :ok
     end
   end
 
@@ -112,7 +147,8 @@ defmodule Briscola.Game do
     game =
       %Briscola.Game{
         game
-        | players: List.update_at(game.players, winning_player, &take_trick(&1, game.trick)),
+        | players:
+            List.update_at(game.players, winning_player, &Player.take_trick(&1, game.trick)),
           trick: [],
           action_on: winning_player
       }
@@ -215,14 +251,29 @@ defmodule Briscola.Game do
     %Game{game | deck: new_deck, players: new_players}
   end
 
-  def take_trick(player, trick) do
-    %Player{player | pile: player.pile ++ trick}
+  @doc """
+  Check if we should redeal, i.e. the trick has been scored,
+  players need cards, and the deck has enough cards to
+  deal to each player.
+  """
+  @spec needs_redeal?(t()) :: boolean()
+  def needs_redeal?(%Game{} = game) do
+    length(game.trick) == 0 and
+      length(game.deck.cards) > 0 and
+      Enum.all?(game.players, &(length(&1.hand) < @hand_size))
   end
 
+  @doc """
+  Retrieve the trump suit of the current game (the suit of the briscola card).
+  """
   @spec trump_suit(t()) :: Card.suit()
   def trump_suit(game), do: game.briscola.suit
 
-  @spec lead_suit(t()) :: Card.suit()
+  @doc """
+  Retrieve the lead suit of the current trick. If there are no cards in the trick,
+  return `nil`. Otherwise, return the suit of the first card played in the trick.
+  """
+  @spec lead_suit(t()) :: Card.suit() | nil
   def lead_suit(game) when length(game.trick) == 0, do: nil
   def lead_suit(game) when length(game.trick) > 0, do: List.last(game.trick).suit
 
@@ -230,17 +281,15 @@ defmodule Briscola.Game do
   Check if the trick is over, i.e. all players have played a card.
   """
   @spec should_score_trick?(t()) :: boolean()
-  def should_score_trick?(%Game{} = game) do
-    length(game.trick) == length(game.players)
-  end
+  def should_score_trick?(%Game{} = game),
+    do: length(game.trick) == length(game.players)
 
   @doc """
   Check if the game is over, i.e. the deck is empty and all players have no cards.
   """
   @spec game_over?(t()) :: boolean()
-  def game_over?(%Game{} = game) do
-    length(game.deck.cards) == 0 and Enum.all?(game.players, fn p -> length(p.hand) == 0 end)
-  end
+  def game_over?(%Game{} = game),
+    do: length(game.deck.cards) == 0 and Enum.all?(game.players, fn p -> length(p.hand) == 0 end)
 
   @doc """
   Return players in order of highest score to lowest.

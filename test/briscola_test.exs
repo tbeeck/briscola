@@ -233,7 +233,7 @@ defmodule BriscolaTest do
         |> TestGame.hand(1, [%Briscola.Card{rank: 5, suit: :cups}])
         |> TestGame.action_on(1)
 
-      {:ok, game} = Briscola.Game.play(game, 0)
+      {:ok, game} = Briscola.Game.play(game, %Briscola.Card{rank: 5, suit: :cups})
 
       {:ok, game, winning_player} = Briscola.Game.score_trick(game)
 
@@ -388,6 +388,21 @@ defmodule BriscolaTest do
       # Check all the previous cards are in the new hands
       assert Enum.all?(old_p1_hand, fn card -> Enum.any?(new_p1_hand, fn c -> c == card end) end)
       assert Enum.all?(old_p2_hand, fn card -> Enum.any?(new_p2_hand, fn c -> c == card end) end)
+    end
+
+    test "can't play before redeal" do
+      {:ok, game, _winner} =
+        TestGame.new(players: 2)
+        |> TestGame.briscola(%Briscola.Card{rank: 2, suit: :cups})
+        |> TestGame.trick([
+          %Briscola.Card{rank: 3, suit: :cups},
+          %Briscola.Card{rank: 4, suit: :cups}
+        ])
+        |> TestGame.fill_hands(2)
+        |> TestGame.action_on(0)
+        |> Briscola.Game.score_trick()
+
+      assert {:error, :must_redeal} = Briscola.Game.play(game, 1)
     end
   end
 
