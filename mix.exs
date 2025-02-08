@@ -4,7 +4,7 @@ defmodule Briscola.MixProject do
   def project do
     [
       app: :briscola,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -12,6 +12,7 @@ defmodule Briscola.MixProject do
       test_coverage: [
         ignore_modules: [
           Mix.Tasks.Briscola.Play,
+          Briscola.Strategy.Player,
           ~r"BriscolaTest.*",
           ~r"String\.Chars\.Briscola\..*"
         ]
