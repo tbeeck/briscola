@@ -37,6 +37,15 @@ defmodule BriscolaTest.Simulator do
       assert :game_over == elem(List.first(sim.log), 0)
     end
 
+    test "first log message is game start" do
+      game = Game.new(players: 2)
+      strategies = [Strategy.Random, Strategy.Random]
+      sim = Simulator.new(game, strategies)
+
+      # End of the log is the beginning
+      assert :start == elem(List.last(sim.log), 0)
+    end
+
     test "cannot create a simulator with mismatched strategies" do
       game = Game.new(players: 2)
       strategies = [Strategy.Random]

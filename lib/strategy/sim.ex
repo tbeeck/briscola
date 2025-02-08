@@ -19,6 +19,7 @@ defmodule Briscola.Strategy.Simulator do
           {:game_over, [Briscola.Player.t()]}
           | {:trick_winner, integer()}
           | {:player_turn, integer(), Briscola.Card.t()}
+          | {:start, Briscola.Game.t()}
 
   @type new_options() :: [on_message: (Game.t(), log_message() -> any())]
 
@@ -37,7 +38,12 @@ defmodule Briscola.Strategy.Simulator do
     message_handler =
       Keyword.get(opts, :on_message, Keyword.get(opts, :on_message, fn _, _ -> nil end))
 
-    %Simulator{game: game, strategies: strategies, log: [], on_message: message_handler}
+    %Simulator{
+      game: game,
+      strategies: strategies,
+      log: [{:start, game}],
+      on_message: message_handler
+    }
   end
 
   @doc """
@@ -55,6 +61,7 @@ defmodule Briscola.Strategy.Simulator do
   Simulate a single turn in the game.
   That may mean playing a card, scoring a trick then redealing, or ending the game.
   """
+  @spec sim_turn(t()) :: t()
   def sim_turn(%Simulator{} = sim) do
     game = sim.game
     strategies = sim.strategies
